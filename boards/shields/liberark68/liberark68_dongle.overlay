@@ -1,0 +1,8 @@
+/*
+ * LiberArk68 - DONGLE (third Xiao nRF52840 + Prospector adapter)
+ * Acts as the BLE central. Has no kscan of its own; both halves are peripherals.
+ * Hosts the keymap + matrix transform so ZMK Studio can edit them.
+ */
+
+#include "liberark68.dtsi"
+#include <dt-bindings/zmk/keys.h>

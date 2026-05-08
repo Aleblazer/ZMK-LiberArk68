@@ -1,0 +1,15 @@
+config SHIELD_LIBERARK68_LEFT
+    def_bool $(shields_list_contains,liberark68_left)
+
+config SHIELD_LIBERARK68_RIGHT
+    def_bool $(shields_list_contains,liberark68_right)
+
+config SHIELD_LIBERARK68_DONGLE
+    def_bool $(shields_list_contains,liberark68_dongle)
+
+if SHIELD_LIBERARK68_LEFT || SHIELD_LIBERARK68_RIGHT || SHIELD_LIBERARK68_DONGLE
+
+config ZMK_KEYBOARD_NAME
+    default "LiberArk68"
+
+endif

@@ -1,0 +1,26 @@
+if SHIELD_LIBERARK68_LEFT || SHIELD_LIBERARK68_RIGHT || SHIELD_LIBERARK68_DONGLE
+
+config ZMK_SPLIT
+    default y
+
+config SPI
+    default y
+
+endif
+
+# Dongle is the BLE central with two peripherals (left + right)
+if SHIELD_LIBERARK68_DONGLE
+
+config ZMK_SPLIT_ROLE_CENTRAL
+    default y
+
+config ZMK_SPLIT_BLE_PERIPHERAL_COUNT
+    default 2
+
+config BT_MAX_CONN
+    default 6
+
+config BT_MAX_PAIRED
+    default 6
+
+endif

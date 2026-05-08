@@ -21,7 +21,12 @@
 
 / {
     chosen {
-        zmk,matrix-transform = &default_transform;
+        /*
+         * Intentionally NOT setting zmk,matrix-transform here.
+         * With ZMK Studio enabled, the build asserts that the matrix
+         * transform comes from the active physical-layout's `transform`
+         * property, not from chosen. Setting both fails the build.
+         */
         zmk,physical-layout = &default_physical_layout;
     };
 

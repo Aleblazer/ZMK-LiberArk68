@@ -11,3 +11,10 @@ include:
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y
     artifact-name: liberark68_dongle
+  # Flashing this wipes the ZMK settings partition (BLE pairings, Studio
+  # keymap edits, etc.). All three boards use the same MCU/partition layout,
+  # so one .uf2 works for any of them. Flash this, wait ~5s, then re-flash
+  # the normal firmware to restore.
+  - board: xiao_ble//zmk
+    shield: settings_reset
+    artifact-name: settings_reset

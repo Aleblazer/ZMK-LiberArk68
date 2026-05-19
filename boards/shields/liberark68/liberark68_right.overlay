@@ -22,6 +22,15 @@
     };
 };
 
+/*
+ * Shift this side's local kscan rows (0..2) into the combined matrix
+ * rows (3..5) before lookup, so the right half's keys index into the
+ * right-side slice of default_transform's map.
+ */
+&default_transform {
+    row-offset = <3>;
+};
+
 / {
     chosen {
         zmk,kscan = &kscan0;

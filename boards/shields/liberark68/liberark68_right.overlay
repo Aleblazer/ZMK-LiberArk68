@@ -1,64 +1,13 @@
-/*
- * LiberArk68 - RIGHT half overlay
- * Wiring is identical to the left half (mirrored PCB).
- * The split layer maps this side's local rows 0..2 -> combined rows 3..5.
- */
+/* LiberArk68 - RIGHT half (peripheral). Mirrored PCB, same wiring as left. */
 
 #include "liberark68.dtsi"
-#include <dt-bindings/zmk/keys.h>
-
-&xiao_spi {
-    status = "okay";
-    cs-gpios = <&xiao_d 3 GPIO_ACTIVE_LOW>;
-
-    shifter: 595@0 {
-        compatible = "zmk,gpio-595";
-        status = "okay";
-        gpio-controller;
-        #gpio-cells = <2>;
-        spi-max-frequency = <4000000>;
-        reg = <0>;
-        ngpios = <16>;
-    };
-};
+#include "liberark68_kscan.dtsi"
 
 /*
  * Shift this side's local kscan rows (0..2) into the combined matrix
- * rows (3..5) before lookup, so the right half's keys index into the
- * right-side slice of default_transform's map.
+ * rows (3..5) so the right half's keys index the right slice of
+ * default_transform's map.
  */
 &default_transform {
     row-offset = <3>;
-};
-
-/ {
-    chosen {
-        zmk,kscan = &kscan0;
-    };
-
-    kscan0: kscan {
-        compatible = "zmk,kscan-gpio-matrix";
-        diode-direction = "col2row";
-
-        row-gpios
-            = <&xiao_d 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-            , <&xiao_d 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-            , <&xiao_d 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
-            ;
-
-        col-gpios
-            = <&shifter  0 GPIO_ACTIVE_HIGH>
-            , <&shifter  1 GPIO_ACTIVE_HIGH>
-            , <&shifter  2 GPIO_ACTIVE_HIGH>
-            , <&shifter  3 GPIO_ACTIVE_HIGH>
-            , <&shifter  4 GPIO_ACTIVE_HIGH>
-            , <&shifter  5 GPIO_ACTIVE_HIGH>
-            , <&shifter  6 GPIO_ACTIVE_HIGH>
-            , <&shifter  7 GPIO_ACTIVE_HIGH>
-            , <&shifter  8 GPIO_ACTIVE_HIGH>
-            , <&shifter  9 GPIO_ACTIVE_HIGH>
-            , <&shifter 10 GPIO_ACTIVE_HIGH>
-            , <&shifter 11 GPIO_ACTIVE_HIGH>
-            ;
-    };
 };

@@ -1,0 +1,60 @@
+/*
+ * Shared kscan setup for both halves (identical wiring on left and right PCBs).
+ *
+ * Xiao nRF52840 pinout:
+ *   D0..D2 -> ROW0..ROW2
+ *   D3     -> SR-CS  (74HC595 RCLK / SPI CS)
+ *   D8     -> SCLK   (74HC595 SRCLK)
+ *   D10    -> MOSI   (74HC595 SER)
+ *
+ * Two 74HC595s daisy-chained over SPI give 16 virtual GPIOs, of which we use
+ * 0..11 for COL0..COL11 (4 extras are broken out on the PCB but unused here).
+ * Diode direction "col2row" matches the switch -> diode -> row wiring.
+ */
+
+&xiao_spi {
+    status = "okay";
+    cs-gpios = <&xiao_d 3 GPIO_ACTIVE_LOW>;
+
+    shifter: 595@0 {
+        compatible = "zmk,gpio-595";
+        status = "okay";
+        gpio-controller;
+        #gpio-cells = <2>;
+        spi-max-frequency = <4000000>;
+        reg = <0>;
+        ngpios = <16>;
+    };
+};
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+    };
+
+    kscan0: kscan {
+        compatible = "zmk,kscan-gpio-matrix";
+        diode-direction = "col2row";
+
+        row-gpios
+            = <&xiao_d 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&xiao_d 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&xiao_d 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            ;
+
+        col-gpios
+            = <&shifter  0 GPIO_ACTIVE_HIGH>   /* COL0  - U2 QA */
+            , <&shifter  1 GPIO_ACTIVE_HIGH>   /* COL1  - U2 QB */
+            , <&shifter  2 GPIO_ACTIVE_HIGH>   /* COL2  - U2 QC */
+            , <&shifter  3 GPIO_ACTIVE_HIGH>   /* COL3  - U2 QD */
+            , <&shifter  4 GPIO_ACTIVE_HIGH>   /* COL4  - U2 QE */
+            , <&shifter  5 GPIO_ACTIVE_HIGH>   /* COL5  - U2 QF */
+            , <&shifter  6 GPIO_ACTIVE_HIGH>   /* COL6  - U2 QG */
+            , <&shifter  7 GPIO_ACTIVE_HIGH>   /* COL7  - U2 QH */
+            , <&shifter  8 GPIO_ACTIVE_HIGH>   /* COL8  - U3 QA */
+            , <&shifter  9 GPIO_ACTIVE_HIGH>   /* COL9  - U3 QB */
+            , <&shifter 10 GPIO_ACTIVE_HIGH>   /* COL10 - U3 QC */
+            , <&shifter 11 GPIO_ACTIVE_HIGH>   /* COL11 - U3 QD */
+            ;
+    };
+};

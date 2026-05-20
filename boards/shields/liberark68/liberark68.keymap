@@ -1,17 +1,14 @@
 /*
- * LiberArk68 default keymap
+ * LiberArk68 default keymap.
  *
- * Bindings array order (matches matrix-transform map in liberark68.dtsi):
+ * Bindings order matches the matrix-transform map in liberark68.dtsi:
  *   row 0: L cols 0..11, then R cols 0..11   (24)
  *   row 1: L cols 0..11, then R cols 0..11   (24)
  *   row 2: L cols 0..9,  then R cols 0..9    (20)
  *
- * Layer references from KLE:
- *   "Layer 4" -> &mo 4 (left outer mid)
- *   "Layer 2" -> &mo 2 (left thumb)
- *   "Layer 3" -> &mo 3 (right thumb)
- *
- * "Hyper" position = LGUI (per user)
+ * Momentary layer keys from the KLE: L outer-mid -> mo 4, L thumb -> mo 2,
+ * R thumb -> mo 3. Layers 1-4 are placeholder &trans; fill them in via Studio
+ * or by editing the layer_N blocks below.
  */
 
 #include <behaviors.dtsi>

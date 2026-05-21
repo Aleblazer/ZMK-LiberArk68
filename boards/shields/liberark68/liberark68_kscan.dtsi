@@ -36,6 +36,13 @@
         compatible = "zmk,kscan-gpio-matrix";
         diode-direction = "col2row";
 
+        /*
+         * Before sleep, drive every column HIGH (the 595 latches hold without
+         * further SPI activity) and arm the row GPIOs as wake interrupts.
+         * Any keypress raises a row pin and wakes the MCU.
+         */
+        wakeup-source;
+
         row-gpios
             = <&xiao_d 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             , <&xiao_d 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>

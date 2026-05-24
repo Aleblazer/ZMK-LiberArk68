@@ -9,10 +9,10 @@ A 68-key wireless split mechanical keyboard with a column-staggered layout, rota
 - **MCU**: 3× [Seeed Studio XIAO nRF52840](https://wiki.seeedstudio.com/XIAO_BLE/) — one per half, one for the dongle
 - **Matrix**: 3 rows × 12 columns per half (34 keys per side; row 2 has 10 keys)
   - Rows: driven directly from MCU GPIOs (D0–D2)
-  - Columns: two daisy-chained [74HC595](https://www.ti.com/product/SN74HC595) shift registers per side, fed over SPI (D3 = CS, D8 = SCLK, D10 = MOSI), giving 16 virtual GPIOs of which 12 are used
+  - Columns: two daisy-chained [74HC595](https://www.ti.com/product/SN74HC595) shift registers per side (through-hole DIP-16 package), fed over SPI (D3 = CS, D8 = SCLK, D10 = MOSI), giving 16 virtual GPIOs of which 12 are used
 - **Diodes**: switch → diode → row (col2row scanning)
 - **Connectivity**: BLE; each half is a peripheral, the third XIAO is the BLE central
-- **Dongle**: [Prospector](https://github.com/carrefinho/prospector-zmk-module) adapter with an ST7789 LCD for live status (layer, modifiers, battery)
+- **Dongle**: [Prospector](https://github.com/carrefinho/prospector-zmk-module/tree/feat/new-status-screens) adapter with an ST7789 LCD for live status (layer, modifiers, battery)
 - **VIK connector** on each half for future peripherals (encoder, trackpad, etc.)
 
 ## Firmware
@@ -56,17 +56,6 @@ If pairings ever get wedged, flash `settings_reset.uf2` onto the misbehaving boa
 ## ZMK Studio
 
 With the dongle plugged in via USB, open [zmk.studio](https://zmk.studio) (Chrome / Edge) and connect. The keyboard will render with its actual column-staggered geometry and rotated thumbs. Edits persist to the dongle's storage and survive power cycles.
-
-## Layout
-
-68 keys total, 34 per side:
-
-- **Row 0** (top, 12+12): number row + outer/inner edges
-- **Row 1** (middle, 12+12): home row + edges
-- **Row 2** (10+10): bottom mods + rotated thumb cluster (3 thumbs per side at 15°/25°/40°)
-- Three momentary layers wired in the KLE: `&mo 4` (left outer), `&mo 2` (left thumb), `&mo 3` (right thumb)
-
-The matrix-transform map and bindings array follow this order: L row 0 cols 0–11, R row 0 cols 0–11, L row 1 cols 0–11, R row 1 cols 0–11, L row 2 cols 0–9, R row 2 cols 0–9.
 
 ## Credits
 

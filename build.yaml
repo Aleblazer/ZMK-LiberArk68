@@ -2,12 +2,21 @@
 include:
   - board: xiao_ble//zmk
     shield: liberark68_left
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
     artifact-name: liberark68_left
   - board: xiao_ble//zmk
     shield: liberark68_right
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
     artifact-name: liberark68_right
   - board: xiao_ble//zmk
     shield: liberark68_dongle prospector_adapter
     snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
     artifact-name: liberark68_dongle
+  # Flashing this wipes the ZMK settings partition (BLE pairings, Studio
+  # keymap edits, etc.). All three boards use the same MCU/partition layout,
+  # so one .uf2 works for any of them. Flash this, wait ~5s, then re-flash
+  # the normal firmware to restore.
+  - board: xiao_ble//zmk
+    shield: settings_reset
+    artifact-name: settings_reset

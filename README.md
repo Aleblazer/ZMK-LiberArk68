@@ -2,6 +2,8 @@
 
 A 68-key wireless split mechanical keyboard with a column-staggered layout, rotated thumb cluster, and a dedicated dongle for ZMK Studio.
 
+Designed ground-up around ZMK firmware. The PCB integrates winged gasket mounting points directly into the board outline, intended to pair with a dedicated low-profile 3D-printed gasket-mount case — no separate plate or mounting hardware required.
+
 ![LiberArk68 build](docs/liberark68.jpg)
 
 ## Hardware

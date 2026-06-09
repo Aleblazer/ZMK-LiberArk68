@@ -1,0 +1,66 @@
+/*
+ * LiberArk68 - rotary encoder add-on (shared).
+ *
+ * Two EC11 encoders per side, wired to the VIK header pins:
+ *   TOP encoder    A/B = VIK-GP1 / VIK-GP2 = P1.11 / P1.12 = D6 / D7
+ *   BOTTOM encoder A/B = VIK-CS  / VIK-RGB = P0.09 / P0.10
+ *
+ * The push-switches are part of the key matrix (col 10/11, row 2) and live in
+ * the keymap, not here. Only rotation is handled by these EC11 sensor nodes.
+ *
+ * Nodes are defined disabled; each half's overlay enables only its own pair.
+ * The `sensors` node lists all four in GLOBAL order, which is also the
+ * sensor-bindings index order in the keymap:
+ *   0 = left top, 1 = left bottom, 2 = right top, 3 = right bottom
+ * (Right-side events reach the dongle central over the split BLE link.)
+ *
+ * NOTE: P0.09 / P0.10 are the nRF52840 NFC antenna pins. The bottom encoder
+ * only works with CONFIG_NFCT_PINS_AS_GPIOS=y (set in the half .conf files).
+ *
+ * `steps`/`triggers-per-rotation` assume a common 20-detent EC11 (4 pulses per
+ * detent = 80 steps, one keymap trigger per detent). Tune if rotation feels
+ * too fast/slow for your specific encoder.
+ */
+
+/ {
+    left_encoder_top: encoder_left_top {
+        compatible = "alps,ec11";
+        a-gpios = <&xiao_d 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&xiao_d 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        steps = <80>;
+        status = "disabled";
+    };
+
+    left_encoder_bottom: encoder_left_bottom {
+        compatible = "alps,ec11";
+        a-gpios = <&gpio0 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&gpio0 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        steps = <80>;
+        status = "disabled";
+    };
+
+    right_encoder_top: encoder_right_top {
+        compatible = "alps,ec11";
+        a-gpios = <&xiao_d 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&xiao_d 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        steps = <80>;
+        status = "disabled";
+    };
+
+    right_encoder_bottom: encoder_right_bottom {
+        compatible = "alps,ec11";
+        a-gpios = <&gpio0 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&gpio0 10 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        steps = <80>;
+        status = "disabled";
+    };
+
+    sensors: sensors {
+        compatible = "zmk,keymap-sensors";
+        sensors = <&left_encoder_top
+                   &left_encoder_bottom
+                   &right_encoder_top
+                   &right_encoder_bottom>;
+        triggers-per-rotation = <20>;
+    };
+};

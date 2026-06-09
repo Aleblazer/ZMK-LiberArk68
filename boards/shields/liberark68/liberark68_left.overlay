@@ -2,3 +2,12 @@
 
 #include "liberark68.dtsi"
 #include "liberark68_kscan.dtsi"
+
+/* Enable this half's two encoders (global sensor indices 0 and 1). */
+&left_encoder_top {
+    status = "okay";
+};
+
+&left_encoder_bottom {
+    status = "okay";
+};

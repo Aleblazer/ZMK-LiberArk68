@@ -15,6 +15,7 @@
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/ext_power.h>
 
 #define TRANS_ROW_24 \
 &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans \
@@ -90,7 +91,13 @@
         layer_4 {
             display-name = "L4";
             bindings = <
-                TRANS_ROW_24
+/*
+ * Ext-power diagnostics for the dongle's switched VCC rail (feeds the OLED).
+ * L4+ESC = toggle, L4+1 = force on, L4+2 = force off. Remove once the OLED
+ * power question is settled.
+ */
+&ext_power EP_TOG &ext_power EP_ON &ext_power EP_OFF &trans &trans &trans &trans &trans &trans &trans &trans &trans
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans
                 TRANS_ROW_24
                 TRANS_ROW_20
                 TRANS_ENC

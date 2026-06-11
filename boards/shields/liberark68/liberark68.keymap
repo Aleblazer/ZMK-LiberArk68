@@ -48,9 +48,11 @@
             >;
 
             /*
-             * Top encoder sends F23/F24 — silent in normal apps by design;
-             * bind them in macro/hotkey software. Verified working on
-             * hardware via a temporary PG_UP/PG_DN swap.
+             * Top encoder sends F23/F24. These sit above the default NKRO
+             * report's usage range and are silently dropped unless the dongle
+             * sets CONFIG_ZMK_HID_KEYBOARD_NKRO_EXTENDED_REPORT=y (it does).
+             * They still show nothing in normal apps — bind them in
+             * macro/hotkey software.
              */
             sensor-bindings
                 = <&inc_dec_kp F23 F24>             /* 0  left top    */

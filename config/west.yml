@@ -2,15 +2,20 @@ manifest:
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-    - name: carrefinho
-      url-base: https://github.com/carrefinho
+    - name: aym1607
+      url-base: https://github.com/AYM1607
+    - name: mctechnology17
+      url-base: https://github.com/mctechnology17
   projects:
     - name: zmk
       remote: zmkfirmware
       revision: main
       import: app/west.yml
-    - name: prospector-zmk-module
-      remote: carrefinho
-      revision: feat/new-status-screens
+    - name: zmk-driver-azoteq-iqs5xx
+      remote: aym1607
+      revision: main
+    - name: zmk-oled-adapter
+      remote: mctechnology17
+      revision: main
   self:
     path: config

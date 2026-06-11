@@ -47,8 +47,13 @@
 &kp C_PP   &kp C_MUTE
             >;
 
+            /*
+             * Top encoder is PG_UP/PG_DN for bring-up testing — F23/F24 send
+             * fine over HID but most apps show no visible reaction to them.
+             * Swap back to <&inc_dec_kp F23 F24> once verified.
+             */
             sensor-bindings
-                = <&inc_dec_kp F23 F24>             /* 0  left top    */
+                = <&inc_dec_kp PG_UP PG_DN>         /* 0  left top    */
                 , <&inc_dec_kp C_VOL_UP C_VOL_DN>;  /* 1  left bottom */
         };
 

@@ -19,6 +19,17 @@
     row-offset = <3>;
 };
 
+/*
+ * The board's i2c1 pinctrl sets no bias on SDA/SCL (P0.04/P0.05). Enable the
+ * nRF52840's internal ~13k pull-ups so the bus works even if the trackpad
+ * carrier has no external pull-up resistors; harmless in parallel if it does.
+ */
+&i2c1_default {
+    group1 {
+        bias-pull-up;
+    };
+};
+
 &xiao_i2c {
     status = "okay";
 

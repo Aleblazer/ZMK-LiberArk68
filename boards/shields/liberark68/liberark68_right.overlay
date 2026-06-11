@@ -11,3 +11,12 @@
 &default_transform {
     row-offset = <3>;
 };
+
+/* Enable this half's two encoders (global sensor indices 2 and 3). */
+&right_encoder_top {
+    status = "okay";
+};
+
+&right_encoder_bottom {
+    status = "okay";
+};

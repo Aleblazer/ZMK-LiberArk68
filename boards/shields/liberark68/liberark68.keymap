@@ -48,15 +48,15 @@
             >;
 
             /*
-             * Top encoder sends F23/F24. These sit above the default NKRO
-             * report's usage range and are silently dropped unless the dongle
-             * sets CONFIG_ZMK_HID_KEYBOARD_NKRO_EXTENDED_REPORT=y (it does).
-             * They still show nothing in normal apps — bind them in
-             * macro/hotkey software.
+             * Both encoders send F-keys (top F21/F22, bottom F20/F19). These
+             * sit above the default NKRO report's usage range and are silently
+             * dropped unless the dongle sets
+             * CONFIG_ZMK_HID_KEYBOARD_NKRO_EXTENDED_REPORT=y (it does). They
+             * show nothing in normal apps — bind them in macro/hotkey software.
              */
             sensor-bindings
-                = <&inc_dec_kp F23 F24>             /* 0  left top    */
-                , <&inc_dec_kp C_VOL_UP C_VOL_DN>;  /* 1  left bottom */
+                = <&inc_dec_kp F21 F22>   /* 0  left top    */
+                , <&inc_dec_kp F20 F19>;  /* 1  left bottom */
         };
 
         layer_1 {

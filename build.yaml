@@ -8,7 +8,8 @@ include:
     shield: liberark68_right
     cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
     artifact-name: liberark68_right
-  - board: nice_nano_v2
+  # nice!nano clone; bare board name defaults to revision 2.0.0 (= v2 hardware)
+  - board: nice_nano//zmk
     shield: liberark68_dongle oled_adapter_pro_micro_128x64
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
@@ -18,6 +19,6 @@ include:
   - board: xiao_ble//zmk
     shield: settings_reset
     artifact-name: settings_reset_xiao
-  - board: nice_nano_v2
+  - board: nice_nano//zmk
     shield: settings_reset
     artifact-name: settings_reset_nicenano

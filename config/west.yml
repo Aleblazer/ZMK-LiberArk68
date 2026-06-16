@@ -6,6 +6,8 @@ manifest:
       url-base: https://github.com/AYM1607
     - name: mctechnology17
       url-base: https://github.com/mctechnology17
+    - name: badjeff
+      url-base: https://github.com/badjeff
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -16,6 +18,9 @@ manifest:
       revision: main
     - name: zmk-oled-adapter
       remote: mctechnology17
+      revision: main
+    - name: zmk-analog-input-driver
+      remote: badjeff
       revision: main
   self:
     path: config

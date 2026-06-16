@@ -1,4 +1,11 @@
-/* LiberArk68 - RIGHT half (peripheral). Mirrored PCB, same wiring as left. */
+/*
+ * LiberArk68 - RIGHT half (peripheral). Mirrored PCB, same matrix wiring as
+ * left. On this variant the right VIK header carries an Azoteq TPS43
+ * trackpad (IQS5xx over I2C) instead of encoders:
+ *   SDA / SCL = VIK SDA / SCL  = P0.04 / P0.05 (xiao_i2c)
+ *   RST       = VIK-GP1        = P1.11 (D6), active low
+ *   RDY       = VIK-GP2        = P1.12 (D7), active high
+ */
 
 #include "liberark68.dtsi"
 #include "liberark68_kscan.dtsi"
@@ -12,11 +19,55 @@
     row-offset = <3>;
 };
 
-/* Enable this half's two encoders (global sensor indices 2 and 3). */
-&right_encoder_top {
-    status = "okay";
+/*
+ * The board's i2c1 pinctrl sets no bias on SDA/SCL (P0.04/P0.05). Enable the
+ * nRF52840's internal ~13k pull-ups so the bus works even if the trackpad
+ * carrier has no external pull-up resistors; harmless in parallel if it does.
+ */
+&i2c1_default {
+    group1 {
+        bias-pull-up;
+    };
 };
 
-&right_encoder_bottom {
+&xiao_i2c {
     status = "okay";
+
+    trackpad: iqs5xx@74 {
+        compatible = "azoteq,iqs5xx";
+        reg = <0x74>;
+        status = "okay";
+        reset-gpios = <&gpio1 11 GPIO_ACTIVE_LOW>;  /* VIK-GP1 */
+        rdy-gpios = <&gpio1 12 GPIO_ACTIVE_HIGH>;   /* VIK-GP2 */
+
+        /* gestures */
+        one-finger-tap;
+        two-finger-tap;
+        press-and-hold;
+        press-and-hold-time = <250>;
+        scroll;
+        natural-scroll-y;
+
+        /* tuning */
+        bottom-beta = <5>;
+        stationary-threshold = <5>;
+    };
+};
+
+/*
+ * Forward trackpad input over the split link. The dongle declares the
+ * matching endpoint (same reg) and an input-listener; see
+ * liberark68_dongle.overlay.
+ */
+/ {
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        trackpad_split: trackpad_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+            device = <&trackpad>;
+        };
+    };
 };

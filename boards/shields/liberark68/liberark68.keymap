@@ -5,6 +5,7 @@
  *   row 0: L cols 0..11, then R cols 0..11   (24)
  *   row 1: L cols 0..11, then R cols 0..11   (24)
  *   row 2: L cols 0..9,  then R cols 0..9    (20)
+ *   left encoder pushes: top, bottom         (2)
  *
  * Momentary layer keys from the KLE: L outer-mid -> mo 4, L thumb -> mo 2,
  * R thumb -> mo 3. Layers 1-4 are placeholder &trans; fill them in via Studio
@@ -14,7 +15,6 @@
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
-#include <dt-bindings/zmk/pointing.h>
 
 #define TRANS_ROW_24 \
 &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans \
@@ -24,22 +24,10 @@
 &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans \
 &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans
 
-/* four encoder push-switch positions (L top, L bottom, R top, R bottom) */
-#define TRANS_ENC &trans &trans &trans &trans
+/* two encoder push-switch positions (L top, L bottom) */
+#define TRANS_ENC &trans &trans
 
 / {
-    behaviors {
-        /*
-         * Mouse-wheel encoder: &inc_dec_kp only sends keycodes, so wrap the
-         * mouse-scroll behavior in a generic sensor-rotate. CW = scroll up.
-         */
-        encoder_scroll: encoder_scroll {
-            compatible = "zmk,behavior-sensor-rotate";
-            #sensor-binding-cells = <0>;
-            bindings = <&msc SCRL_UP>, <&msc SCRL_DOWN>;
-        };
-    };
-
     keymap {
         compatible = "zmk,keymap";
 
@@ -55,15 +43,20 @@
 /* row 2  L0..L9                                                                              R0..R9                                                                                              */
 &kp LCTRL &kp LALT &kp LGUI &kp F12  &mo 2     &kp SPACE &kp RET    &kp GRAVE &kp LBKT &kp MINUS    &kp RIGHT &kp DOWN &kp UP &kp LEFT &mo 3 &kp SPACE &kp RET   &kp F11  &kp RBKT  &kp EQUAL
 
-/* encoder push:  L-top      L-bottom    R-top       R-bottom */
-&kp C_PP   &kp C_MUTE   &kp C_NEXT  &kp C_PREV
+/* encoder push:  L-top      L-bottom */
+&kp C_PP   &kp C_MUTE
             >;
 
+            /*
+             * Both encoders send F-keys (top F21/F22, bottom F20/F19). These
+             * sit above the default NKRO report's usage range and are silently
+             * dropped unless the dongle sets
+             * CONFIG_ZMK_HID_KEYBOARD_NKRO_EXTENDED_REPORT=y (it does). They
+             * show nothing in normal apps — bind them in macro/hotkey software.
+             */
             sensor-bindings
-                = <&inc_dec_kp F23 F24>            /* 0  left top    */
-                , <&inc_dec_kp C_VOL_UP C_VOL_DN>  /* 1  left bottom */
-                , <&inc_dec_kp F21 F22>            /* 2  right top   */
-                , <&encoder_scroll>;               /* 3  right bottom (mouse wheel) */
+                = <&inc_dec_kp F22 F21>   /* 0  left top    */
+                , <&inc_dec_kp F19 F20>;  /* 1  left bottom */
         };
 
         layer_1 {

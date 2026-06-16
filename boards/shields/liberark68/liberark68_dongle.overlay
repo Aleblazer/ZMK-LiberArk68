@@ -1,7 +1,30 @@
 /*
- * LiberArk68 - DONGLE (third Xiao nRF52840 + Prospector adapter).
+ * LiberArk68 - DONGLE (nice!nano v2 + 128x64 OLED adapter).
  * Pure BLE central — no local kscan. Hosts the keymap, matrix transform,
- * and physical layout so ZMK Studio can edit them.
+ * and physical layout so ZMK Studio can edit them. The OLED display itself
+ * is wired up by the oled_adapter_pro_micro_128x64 shield.
  */
 
 #include "liberark68.dtsi"
+
+/*
+ * Receiving end of the right half's trackpad: an input-split endpoint with
+ * the same reg as the peripheral side (liberark68_right.overlay), plus a
+ * listener that feeds the events into ZMK's pointing pipeline.
+ */
+/ {
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        trackpad_split: trackpad_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+        };
+    };
+
+    trackpad_listener {
+        compatible = "zmk,input-listener";
+        device = <&trackpad_split>;
+    };
+};

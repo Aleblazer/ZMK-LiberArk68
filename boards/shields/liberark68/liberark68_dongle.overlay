@@ -1,8 +1,8 @@
 /*
- * LiberArk68 - DONGLE (nice!nano v2 + 128x64 OLED adapter).
+ * LiberArk68 - DONGLE (Xiao nRF52840 + Prospector adapter, ST7789).
  * Pure BLE central — no local kscan. Hosts the keymap, matrix transform,
- * and physical layout so ZMK Studio can edit them. The OLED display itself
- * is wired up by the oled_adapter_pro_micro_128x64 shield.
+ * and physical layout so ZMK Studio can edit them. The display is wired up
+ * by the prospector_adapter shield.
  */
 
 #include "liberark68.dtsi"

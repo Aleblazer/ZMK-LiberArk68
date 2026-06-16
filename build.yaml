@@ -8,17 +8,14 @@ include:
     shield: liberark68_right
     cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
     artifact-name: liberark68_right
-  # nice!nano clone; bare board name defaults to revision 2.0.0 (= v2 hardware)
-  - board: nice_nano//zmk
-    shield: liberark68_dongle oled_adapter_pro_micro_128x64
+  # Dongle: third Xiao + Prospector adapter (ST7789), new status screens.
+  - board: xiao_ble//zmk
+    shield: liberark68_dongle prospector_adapter
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
     artifact-name: liberark68_dongle
-  # Settings wipe images — the halves and the dongle are different MCUs now,
-  # so build one per board type. Flash, wait ~5s, then re-flash normal firmware.
+  # Settings wipe image — all three boards are Xiao nRF52840 again.
+  # Flash, wait ~5s, then re-flash normal firmware.
   - board: xiao_ble//zmk
     shield: settings_reset
-    artifact-name: settings_reset_xiao
-  - board: nice_nano//zmk
-    shield: settings_reset
-    artifact-name: settings_reset_nicenano
+    artifact-name: settings_reset

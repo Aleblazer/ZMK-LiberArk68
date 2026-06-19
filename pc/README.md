@@ -25,9 +25,14 @@ dotnet run
 
 It auto-finds the dongle (VID 0x1D50 / PID 0x615E), shows two dropdowns — pick
 the output device each fader controls (e.g. the Audeze Maxwell "Game" and
-"Chat" endpoints) — and live bars for each fader. Selections are saved to
-`%APPDATA%\LiberArkFaders\settings.json`. Move a fader and its device's volume
-follows.
+"Chat" endpoints) — and live bars for each fader. Move a fader and its device's
+volume follows.
+
+Each fader also has a **Max %** cap. The throw scales into `0..cap`, so a cap of
+60 means bottom = 0%, top = 60%, middle = 30% — handy for devices that get
+painfully loud past a certain point. Changing the cap applies immediately
+(without moving the fader), so dropping it instantly pulls a loud device back.
+Device choices and caps are saved to `%APPDATA%\LiberArkFaders\settings.json`.
 
 To build a standalone exe:
 

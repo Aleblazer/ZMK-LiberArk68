@@ -5,9 +5,11 @@ using NAudio.CoreAudioApi;
 namespace LiberArkFaders;
 
 /// <summary>
-/// Reads the LiberArk68 dongle's hid-io fader joystick (report id 2:
-/// [1]=left 0..254, [2]=right 0..254) and drives the volume of two chosen
-/// Windows output devices (e.g. the Audeze Maxwell Game / Chat endpoints).
+/// Reads the LiberArk68 dongle's hid-io fader joystick (report id 2: two signed
+/// 16-bit LE axes, [1..2]=left [3..4]=right, raw wiper mV ~0..3300) and drives
+/// the volume of two chosen Windows output devices (e.g. the Audeze Maxwell
+/// Game / Chat endpoints). Each fader has its own max-volume cap: the throw
+/// scales into 0..cap (top = cap, middle = cap/2, bottom = 0).
 /// </summary>
 public class MainForm : Form
 {
@@ -42,15 +44,19 @@ public class MainForm : Form
         public required ComboBox Combo;
         public required ProgressBar Bar;
         public required Label Lbl;
+        public required NumericUpDown Limit;  // max output volume % (1..100)
         public double Sm = -1;          // EMA state (smoothed raw value)
-        public int LastPct = -1;        // last percent pushed to the device (deadband)
-        public int Min = int.MaxValue, Max = int.MinValue;  // observed raw range, for calibration
+        public int LastRaw;             // last raw value (so a cap change can re-render)
+        public int LastApplied = -1;    // last volume % pushed to the device (deadband)
+        public int RawMin = int.MaxValue, RawMax = int.MinValue;  // observed raw range, for calibration
     }
 
     sealed class Settings
     {
         public string? LeftDeviceId { get; set; }
         public string? RightDeviceId { get; set; }
+        public int LeftMax { get; set; } = 100;
+        public int RightMax { get; set; } = 100;
     }
 
     static string SettingsPath => Path.Combine(
@@ -63,6 +69,8 @@ public class MainForm : Form
     readonly ProgressBar _pbRight = new() { Maximum = 100, Width = 300 };
     readonly Label _lblLeft = new() { Text = "--", AutoSize = true };
     readonly Label _lblRight = new() { Text = "--", AutoSize = true };
+    readonly NumericUpDown _limLeft = new() { Minimum = 1, Maximum = 100, Value = 100, Width = 54 };
+    readonly NumericUpDown _limRight = new() { Minimum = 1, Maximum = 100, Value = 100, Width = 54 };
     readonly Label _status = new() { Text = "Starting...", AutoSize = true, Dock = DockStyle.Bottom, Padding = new Padding(8) };
 
     readonly MMDeviceEnumerator _enum = new();
@@ -76,7 +84,7 @@ public class MainForm : Form
     public MainForm()
     {
         Text = "LiberArk68 Faders";
-        ClientSize = new Size(540, 250);
+        ClientSize = new Size(600, 260);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -93,10 +101,12 @@ public class MainForm : Form
         lay.Controls.Add(_cbLeft, 1, 0);
         lay.Controls.Add(_lblLeft, 2, 0);
         lay.Controls.Add(_pbLeft, 1, 1);
+        lay.Controls.Add(MaxCap(_limLeft), 2, 1);
         lay.Controls.Add(new Label { Text = "Right fader", AutoSize = true, Anchor = AnchorStyles.Left, Padding = new Padding(0, 12, 8, 0) }, 0, 2);
         lay.Controls.Add(_cbRight, 1, 2);
         lay.Controls.Add(_lblRight, 2, 2);
         lay.Controls.Add(_pbRight, 1, 3);
+        lay.Controls.Add(MaxCap(_limRight), 2, 3);
 
         var btnRefresh = new Button { Text = "Refresh devices", AutoSize = true, Margin = new Padding(0, 10, 0, 0) };
         btnRefresh.Click += (_, _) => LoadDevices();
@@ -105,14 +115,26 @@ public class MainForm : Form
         Controls.Add(lay);
         Controls.Add(_status);
 
-        _left = new Axis { Combo = _cbLeft, Bar = _pbLeft, Lbl = _lblLeft };
-        _right = new Axis { Combo = _cbRight, Bar = _pbRight, Lbl = _lblRight };
+        _left = new Axis { Combo = _cbLeft, Bar = _pbLeft, Lbl = _lblLeft, Limit = _limLeft };
+        _right = new Axis { Combo = _cbRight, Bar = _pbRight, Lbl = _lblRight, Limit = _limRight };
 
-        _cbLeft.SelectedIndexChanged += (_, _) => OnDevicePicked();
-        _cbRight.SelectedIndexChanged += (_, _) => OnDevicePicked();
+        _cbLeft.SelectedIndexChanged += (_, _) => OnDevicePicked(_left);
+        _cbRight.SelectedIndexChanged += (_, _) => OnDevicePicked(_right);
+        _limLeft.ValueChanged += (_, _) => OnLimitChanged(_left);
+        _limRight.ValueChanged += (_, _) => OnLimitChanged(_right);
 
         Load += (_, _) => { LoadDevices(); LoadSettings(); StartHid(); };
         FormClosing += (_, _) => { _run = false; };
+    }
+
+    // "Max [ n ] %" group around a cap spinner.
+    static FlowLayoutPanel MaxCap(NumericUpDown n)
+    {
+        var p = new FlowLayoutPanel { AutoSize = true, Margin = new Padding(0, 2, 0, 0) };
+        p.Controls.Add(new Label { Text = "Max", AutoSize = true, Margin = new Padding(0, 6, 4, 0) });
+        p.Controls.Add(n);
+        p.Controls.Add(new Label { Text = "%", AutoSize = true, Margin = new Padding(2, 6, 0, 0) });
+        return p;
     }
 
     // ---- audio devices ----------------------------------------------------
@@ -145,10 +167,17 @@ public class MainForm : Form
             if (cb.Items[i] is DeviceItem di && di.Id == id) { cb.SelectedIndex = i; return; }
     }
 
-    void OnDevicePicked()
+    void OnDevicePicked(Axis a)
     {
         if (_loadingSettings) return;
         SaveSettings();
+        a.LastApplied = -1;   // force the next fader move to push to the new device
+    }
+
+    void OnLimitChanged(Axis a)
+    {
+        if (!_loadingSettings) SaveSettings();
+        Render(a);   // re-apply now so a new cap takes effect without moving the fader
     }
 
     // ---- settings ---------------------------------------------------------
@@ -163,6 +192,8 @@ public class MainForm : Form
             _loadingSettings = true;
             SelectById(_cbLeft, s.LeftDeviceId);
             SelectById(_cbRight, s.RightDeviceId);
+            _limLeft.Value = ClampLimit(s.LeftMax);
+            _limRight.Value = ClampLimit(s.RightMax);
         }
         catch { /* ignore corrupt settings */ }
         finally { _loadingSettings = false; }
@@ -176,12 +207,16 @@ public class MainForm : Form
             {
                 LeftDeviceId = (_cbLeft.SelectedItem as DeviceItem)?.Id,
                 RightDeviceId = (_cbRight.SelectedItem as DeviceItem)?.Id,
+                LeftMax = (int)_limLeft.Value,
+                RightMax = (int)_limRight.Value,
             };
             Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
             File.WriteAllText(SettingsPath, JsonSerializer.Serialize(s));
         }
         catch { /* best effort */ }
     }
+
+    static decimal ClampLimit(int pct) => Math.Clamp(pct, 1, 100);
 
     // ---- calibration ------------------------------------------------------
 
@@ -288,25 +323,37 @@ public class MainForm : Form
 
     void ApplyAxis(Axis a, int raw)
     {
-        if (raw < a.Min) a.Min = raw;
-        if (raw > a.Max) a.Max = raw;
+        if (raw < a.RawMin) a.RawMin = raw;
+        if (raw > a.RawMax) a.RawMax = raw;
+        a.LastRaw = raw;
 
-        // Smooth the raw value (EMA), then map through the curve. The 16-bit
-        // value is finer but noisier (~+/-15 counts of ADC noise), so smooth
-        // harder than the old 8-bit path did. ValueToPercent clamps to the end
-        // points, so the dead bands at 0% / 100% are continuous — no cliff.
+        // Smooth the raw value (EMA). The 16-bit value is finer but noisier
+        // (~+/-15 counts of ADC noise), so smooth harder than the old 8-bit path.
         a.Sm = a.Sm < 0 ? raw : a.Sm * 0.85 + raw * 0.15;
+        Render(a);
+    }
+
+    // Map the smoothed value through the curve, scale by the fader's max cap,
+    // update the bar/label, and push to the device (1% deadband). Also called
+    // when the cap spinner changes, so a new limit applies without moving the
+    // fader. ValueToPercent clamps to the curve ends, so 0% / 100% are continuous.
+    void Render(Axis a)
+    {
+        if (a.Sm < 0) return;   // no reading yet
+
         int v = (int)Math.Round(a.Sm);
-        int p = Math.Clamp((int)Math.Round(ValueToPercent(v)), 0, 100);
+        double faderPct = ValueToPercent(v);                  // 0..100 fader position
+        int cap = (int)a.Limit.Value;                         // max output volume %
+        int applied = Math.Clamp((int)Math.Round(faderPct * cap / 100.0), 0, 100);
 
-        a.Bar.Value = p;
-        a.Lbl.Text = $"{p}%   raw {raw} ({a.Min}-{a.Max})";
+        a.Bar.Value = applied;
+        a.Lbl.Text = $"{applied}%   raw {a.LastRaw} ({a.RawMin}-{a.RawMax})";
 
-        if (p == a.LastPct) return;     // deadband: only push 1% steps
-        a.LastPct = p;
+        if (applied == a.LastApplied) return;   // deadband: only push 1% steps
+        a.LastApplied = applied;
         if (a.Combo.SelectedItem is DeviceItem di)
         {
-            try { di.Device.AudioEndpointVolume.MasterVolumeLevelScalar = p / 100f; }
+            try { di.Device.AudioEndpointVolume.MasterVolumeLevelScalar = applied / 100f; }
             catch { /* device vanished; user can Refresh */ }
         }
     }

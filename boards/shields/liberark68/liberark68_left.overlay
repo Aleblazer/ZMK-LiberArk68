@@ -1,5 +1,25 @@
-/* LiberArk68 - LEFT half (peripheral). Carries a 10k slide fader on P0.04. */
+/* LiberArk68 - LEFT half (peripheral). 10k slide fader on P0.04 = joystick X. */
+
+#define FADER_INPUT_CODE INPUT_ABS_X
 
 #include "liberark68.dtsi"
 #include "liberark68_kscan.dtsi"
 #include "liberark68_fader.dtsi"
+
+/*
+ * Forward this fader to the dongle over the split link (endpoint reg 0).
+ * The dongle has the matching receiver + an input-listener that pushes it
+ * out the HID-IO joystick. (Right half uses reg 1.)
+ */
+/ {
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        fader_split: fader_split@0 {
+            compatible = "zmk,input-split";
+            reg = <0>;
+            device = <&fader>;
+        };
+    };
+};

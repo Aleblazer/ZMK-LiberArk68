@@ -1,7 +1,9 @@
 /*
- * LiberArk68 - RIGHT half (peripheral). Mirrored PCB, same matrix wiring as
- * left, and the same 10k slide fader on P0.04.
+ * LiberArk68 - RIGHT half (peripheral). Mirrored PCB; 10k slide fader on
+ * P0.04, tagged as joystick Y so the dongle can carry both faders.
  */
+
+#define FADER_INPUT_CODE INPUT_ABS_Y
 
 #include "liberark68.dtsi"
 #include "liberark68_kscan.dtsi"
@@ -14,4 +16,18 @@
  */
 &default_transform {
     row-offset = <3>;
+};
+
+/* Forward this fader to the dongle over the split link (endpoint reg 1). */
+/ {
+    split_inputs {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        fader_split: fader_split@1 {
+            compatible = "zmk,input-split";
+            reg = <1>;
+            device = <&fader>;
+        };
+    };
 };

@@ -22,6 +22,15 @@
 #include <zephyr/dt-bindings/adc/nrf-saadc.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
+/*
+ * Each half tags its fader with a distinct axis so the dongle's HID-IO
+ * joystick can carry both: left = INPUT_ABS_X, right = INPUT_ABS_Y. The
+ * including overlay sets FADER_INPUT_CODE before including this file.
+ */
+#ifndef FADER_INPUT_CODE
+#define FADER_INPUT_CODE INPUT_ABS_X
+#endif
+
 &adc {
     status = "okay";
     #address-cells = <1>;
@@ -50,7 +59,7 @@
             scale-multiplier = <1>;
             scale-divisor = <13>;
             evt-type = <INPUT_EV_ABS>;
-            input-code = <INPUT_ABS_X>;
+            input-code = <FADER_INPUT_CODE>;
             report-on-change-only;
         };
     };

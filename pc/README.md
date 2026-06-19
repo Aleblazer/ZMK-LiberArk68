@@ -1,41 +1,50 @@
 # LiberArk68 PC companion
 
-Host-side tooling for the dual-fader volume variant. The dongle exposes the
-two faders as a 2-axis HID "joystick" on usage page `0xFF0C` (via
-[zmk-hid-io](https://github.com/badjeff/zmk-hid-io)); these tools read that and
-drive Windows audio.
+Host-side app for the dual-fader volume variant. The dongle exposes the two
+slide faders as a HID joystick (Generic Desktop, report id 2 — byte 1 = left,
+byte 2 = right, each 0..254) via a [fork of zmk-hid-io](https://github.com/Aleblazer/zmk-hid-io/tree/absolute-faders)
+patched to forward absolute axes. The app reads that and sets the volume of two
+chosen Windows output devices.
 
-## LiberArkFaders (C#) — bring-up / verification, and the future GUI
+## LiberArkFaders (C# / WinForms)
 
-The main app, built on .NET. Right now it's a console HID reader; it grows
-into the device-picker GUI. Requires the .NET SDK:
+Requires the .NET SDK:
 
 ```bat
 winget install Microsoft.DotNet.SDK.8
 ```
 
+Run it:
+
 ```bat
 cd pc\LiberArkFaders
-dotnet run                 :: list every HID interface (with usage pages)
-dotnet run -- 0xFF0C       :: open the fader interface and print changing bytes
-dotnet run -- 2            :: ...or open by the [index] from the list
+dotnet run
 ```
 
-Move each slider and note which byte index reacts (left vs right) and that it
-sweeps ~0-254.
+It auto-finds the dongle (VID 0x1D50 / PID 0x615E), shows two dropdowns — pick
+the output device each fader controls (e.g. the Audeze Maxwell "Game" and
+"Chat" endpoints) — and live bars for each fader. Selections are saved to
+`%APPDATA%\LiberArkFaders\settings.json`. Move a fader and its device's volume
+follows.
 
-## fader_read.py — optional Python alternative
+To build a standalone exe:
 
-Same job, if you happen to have Python instead of .NET:
+```bat
+dotnet publish -c Release -r win-x64 --self-contained false
+```
+
+### Calibration
+
+The pot is an S-taper, so the byte→percent mapping is a piecewise curve
+(`Curve` in `MainForm.cs`), not linear. The live bars show the resulting
+percent; if the feel is off, capture the byte values at even slider positions
+and edit the curve points.
+
+## fader_read.py — optional Python byte-dumper
+
+A minimal raw-report reader, handy for debugging without .NET:
 
 ```bat
 py -m pip install hidapi
 py pc\fader_read.py
 ```
-
-## Coming next
-
-A small GUI app that maps each fader to a chosen Windows output device (e.g.
-the Audeze Maxwell "Game" / "Chat" endpoints), applies the S-taper
-calibration curve, smooths jitter, and sets per-device volume via the Core
-Audio API.

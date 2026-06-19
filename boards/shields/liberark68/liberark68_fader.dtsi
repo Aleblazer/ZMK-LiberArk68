@@ -52,7 +52,9 @@
 / {
     fader: analog_input_0 {
         compatible = "zmk,analog-input";
-        sampling-hz = <50>;
+        /* 30 Hz is plenty for a volume fader; lower than the old 50 to cut the
+         * peripherals' BLE report rate (battery) with no perceptible lag. */
+        sampling-hz = <30>;
         x-ch {
             io-channels = <&adc 2>;
             mv-mid = <0>;

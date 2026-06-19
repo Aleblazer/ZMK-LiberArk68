@@ -5,11 +5,17 @@
  * so each half's fader wiper goes to VIK-SDA = P0.04 = AIN2 instead
  * (one outer leg to 3V3, the other to GND).
  *
- * Maps the ~0..3.3V wiper voltage to an absolute 0..100 value:
+ * Reports an absolute 0..255 value (high-res on purpose):
  *   mv-mid = 0     -> report absolute position, not a centered joystick offset
- *   scale 1/33     -> 3300 mV / 33 ~= 100
+ *   scale 1/13     -> 3300 mV / 13 ~= 254
  *   report-on-change-only quantizes to whole steps to limit chatter.
- * Tune scale-divisor / add a taper curve once the pot travel is characterized.
+ *
+ * The pot is an S-taper, NOT linear (measured travel->raw: 0/25/50/75/100%
+ * -> ~7/148/1831/3560/3732), so the middle of the throw covers ~90% of the
+ * electrical range. We deliberately do NOT linearize here — the firmware
+ * sends the raw-ish 0..255, and the PC app applies a piecewise-linear
+ * calibration curve from those points. Keeping it high-res preserves what
+ * little resolution the compressed ends have.
  */
 
 #include <zephyr/dt-bindings/adc/adc.h>
@@ -42,7 +48,7 @@
             mv-min-max = <3300>;
             mv-deadzone = <0>;
             scale-multiplier = <1>;
-            scale-divisor = <33>;
+            scale-divisor = <13>;
             evt-type = <INPUT_EV_ABS>;
             input-code = <INPUT_ABS_X>;
             report-on-change-only;

@@ -6,6 +6,8 @@ manifest:
       url-base: https://github.com/carrefinho
     - name: badjeff
       url-base: https://github.com/badjeff
+    - name: aleblazer
+      url-base: https://github.com/Aleblazer
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -17,8 +19,10 @@ manifest:
     - name: zmk-analog-input-driver
       remote: badjeff
       revision: main
+    # Fork with absolute-axis support in the joystick forwarder (for the
+    # slide faders); upstream only forwards relative movement.
     - name: zmk-hid-io
-      remote: badjeff
-      revision: main
+      remote: aleblazer
+      revision: absolute-faders
   self:
     path: config

@@ -4,45 +4,11 @@
  * and physical layout so ZMK Studio can edit them. The display is wired up
  * by the prospector_adapter shield.
  *
- * Faders: receives each half's fader over the split link (reg 0 = left,
- * reg 1 = right) and forwards them out the zmk-hid-io joystick interface
- * (left -> axis X, right -> axis Y) for the PC volume app to read.
+ * DIAGNOSTIC: the fader input-split receivers + hid-io listeners are
+ * temporarily removed while we isolate a USB regression — enabling hid-io's
+ * second USB HID interface stopped keypresses (and the joystick) reaching the
+ * PC. Restore the receivers/listeners from git (commit e84e176) once the
+ * keyboard + hid-io + Studio USB coexistence is sorted.
  */
 
 #include "liberark68.dtsi"
-
-/ {
-    split_inputs {
-        #address-cells = <1>;
-        #size-cells = <0>;
-
-        fader_split_left: fader_split@0 {
-            compatible = "zmk,input-split";
-            reg = <0>;
-        };
-
-        fader_split_right: fader_split@1 {
-            compatible = "zmk,input-split";
-            reg = <1>;
-        };
-    };
-
-    /* Forward INPUT_EV_ABS events out the HID-IO joystick (usage 2). */
-    zip_fwd_to_hid_io: zip_fwd_to_hid_io {
-        compatible = "zmk,input-processor-fwd-to-hid-io";
-        #input-processor-cells = <0>;
-        usage = <2>;   /* HID_IO_USAGE_FWD_TO_JOYSTICK */
-    };
-
-    fader_left_listener {
-        compatible = "zmk,input-listener";
-        device = <&fader_split_left>;
-        input-processors = <&zip_fwd_to_hid_io>;
-    };
-
-    fader_right_listener {
-        compatible = "zmk,input-listener";
-        device = <&fader_split_right>;
-        input-processors = <&zip_fwd_to_hid_io>;
-    };
-};

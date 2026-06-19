@@ -13,12 +13,17 @@ public class MainForm : Form
 {
     const int VID = 0x1D50, PID = 0x615E;
 
-    // Fader byte (0..254) -> volume percent. The pot is an S-taper, so this is
-    // a piecewise curve derived from its measured travel rather than linear.
-    // Recalibrate by capturing the byte values (GUI bars show them) at even
-    // slider positions and editing these points.
+    // Fader byte (0..254) -> volume percent. The slide pot is an S-taper AND the
+    // firmware clamps its top travel to byte 254, so this piecewise curve both
+    // inverts the taper and pins the usable ends:
+    //   - bytes at/below the first point snap to 0%   (kills the resting noise
+    //     float so the bottom is always a solid 0%)
+    //   - bytes at/above the last point snap to 100%  (the top saturates ~254
+    //     with ADC jitter; snapping early guarantees full volume, no flicker)
+    // Recalibrate from the live "raw (min-max)" readouts: sweep each fader fully,
+    // then set the end points to the observed min/max and the mids to taste.
     static readonly (int b, int pct)[] Curve =
-        { (0, 0), (10, 25), (124, 50), (241, 75), (254, 100) };
+        { (4, 0), (12, 25), (140, 50), (192, 75), (245, 100) };
 
     sealed class DeviceItem
     {
@@ -26,6 +31,17 @@ public class MainForm : Form
         public required string Name;
         public required MMDevice Device;
         public override string ToString() => Name;
+    }
+
+    /// <summary>Per-fader UI + filtering state.</summary>
+    sealed class Axis
+    {
+        public required ComboBox Combo;
+        public required ProgressBar Bar;
+        public required Label Lbl;
+        public double Sm = -1;          // EMA state (smoothed raw byte)
+        public int LastPct = -1;        // last percent pushed to the device (deadband)
+        public int Min = 255, Max = 0;  // observed raw range, for calibration
     }
 
     sealed class Settings
@@ -48,17 +64,16 @@ public class MainForm : Form
 
     readonly MMDeviceEnumerator _enum = new();
 
+    Axis _left = null!, _right = null!;
+
     Thread? _hidThread;
     volatile bool _run;
     bool _loadingSettings;
 
-    double _smLeft = -1, _smRight = -1;       // smoothing state
-    int _lastLeftPct = -1, _lastRightPct = -1; // deadband state
-
     public MainForm()
     {
         Text = "LiberArk68 Faders";
-        ClientSize = new Size(470, 250);
+        ClientSize = new Size(540, 250);
         FormBorderStyle = FormBorderStyle.FixedSingle;
         MaximizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
@@ -86,6 +101,9 @@ public class MainForm : Form
 
         Controls.Add(lay);
         Controls.Add(_status);
+
+        _left = new Axis { Combo = _cbLeft, Bar = _pbLeft, Lbl = _lblLeft };
+        _right = new Axis { Combo = _cbRight, Bar = _pbRight, Lbl = _lblRight };
 
         _cbLeft.SelectedIndexChanged += (_, _) => OnDevicePicked();
         _cbRight.SelectedIndexChanged += (_, _) => OnDevicePicked();
@@ -238,23 +256,28 @@ public class MainForm : Form
         if (!IsHandleCreated) return;
         BeginInvoke(() =>
         {
-            ApplyAxis(left, ref _smLeft, ref _lastLeftPct, _cbLeft, _pbLeft, _lblLeft);
-            ApplyAxis(right, ref _smRight, ref _lastRightPct, _cbRight, _pbRight, _lblRight);
+            ApplyAxis(_left, left);
+            ApplyAxis(_right, right);
         });
     }
 
-    void ApplyAxis(int raw, ref double sm, ref int lastPct, ComboBox cb, ProgressBar pb, Label lbl)
+    void ApplyAxis(Axis a, int raw)
     {
-        double pct = ByteToPercent(raw);
-        sm = sm < 0 ? pct : sm * 0.6 + pct * 0.4;   // light smoothing
-        int p = Math.Clamp((int)Math.Round(sm), 0, 100);
+        if (raw < a.Min) a.Min = raw;
+        if (raw > a.Max) a.Max = raw;
 
-        pb.Value = p;
-        lbl.Text = $"{p}%";
+        // Smooth the raw byte (EMA) so the deadzone snaps act on a stable value,
+        // then map to percent — the curve pins the ends to a clean 0 / 100%.
+        a.Sm = a.Sm < 0 ? raw : a.Sm * 0.7 + raw * 0.3;
+        int b = (int)Math.Round(a.Sm);
+        int p = Math.Clamp((int)Math.Round(ByteToPercent(b)), 0, 100);
 
-        if (p == lastPct) return;                    // deadband: 1% steps
-        lastPct = p;
-        if (cb.SelectedItem is DeviceItem di)
+        a.Bar.Value = p;
+        a.Lbl.Text = $"{p}%   raw {raw} ({a.Min}-{a.Max})";
+
+        if (p == a.LastPct) return;     // deadband: only push 1% steps
+        a.LastPct = p;
+        if (a.Combo.SelectedItem is DeviceItem di)
         {
             try { di.Device.AudioEndpointVolume.MasterVolumeLevelScalar = p / 100f; }
             catch { /* device vanished; user can Refresh */ }

@@ -35,10 +35,15 @@ dotnet publish -c Release -r win-x64 --self-contained false
 
 ### Calibration
 
-The pot is an S-taper, so the byte→percent mapping is a piecewise curve
-(`Curve` in `MainForm.cs`), not linear. The live bars show the resulting
-percent; if the feel is off, capture the byte values at even slider positions
-and edit the curve points.
+The pot is an S-taper *and* the firmware clamps its top travel to byte 254, so
+the byte→percent mapping is a piecewise curve (`Curve` in `MainForm.cs`), not
+linear. Its end points snap to a clean 0% / 100% so the bottom doesn't float on
+ADC noise and the top always reaches full volume.
+
+Each fader label shows a live `raw (min-max)` readout. To recalibrate: sweep
+both faders fully bottom-to-top once, note the observed min/max bytes, set
+`Curve`'s first point to `(min, 0)` and last to `(max, 100)`, and adjust the
+mids to taste.
 
 ## fader_read.py — optional Python byte-dumper
 

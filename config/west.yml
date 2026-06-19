@@ -2,8 +2,6 @@ manifest:
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-    - name: aym1607
-      url-base: https://github.com/AYM1607
     - name: carrefinho
       url-base: https://github.com/carrefinho
     - name: badjeff
@@ -13,9 +11,6 @@ manifest:
       remote: zmkfirmware
       revision: main
       import: app/west.yml
-    - name: zmk-driver-azoteq-iqs5xx
-      remote: aym1607
-      revision: main
     - name: prospector-zmk-module
       remote: carrefinho
       revision: feat/new-status-screens

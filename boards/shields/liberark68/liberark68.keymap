@@ -1,12 +1,12 @@
 /*
- * LiberArk68 default keymap.
+ * LiberArk68 default keymap (dual-fader variant).
  *
  * Bindings order matches the matrix-transform map in liberark68.dtsi:
  *   row 0: L cols 0..11, then R cols 0..11   (24)
  *   row 1: L cols 0..11, then R cols 0..11   (24)
  *   row 2: L cols 0..9,  then R cols 0..9    (20)
- *   left encoder pushes: top, bottom         (2)
  *
+ * The faders are analog inputs (not keys), so they don't appear here.
  * Momentary layer keys from the KLE: L outer-mid -> mo 4, L thumb -> mo 2,
  * R thumb -> mo 3. Layers 1-4 are placeholder &trans; fill them in via Studio
  * or by editing the layer_N blocks below.
@@ -24,9 +24,6 @@
 &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans \
 &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans
 
-/* two encoder push-switch positions (L top, L bottom) */
-#define TRANS_ENC &trans &trans
-
 / {
     keymap {
         compatible = "zmk,keymap";
@@ -42,21 +39,7 @@
 
 /* row 2  L0..L9                                                                              R0..R9                                                                                              */
 &kp LCTRL &kp LALT &kp LGUI &kp F12  &mo 2     &kp SPACE &kp RET    &kp GRAVE &kp LBKT &kp MINUS    &kp RIGHT &kp DOWN &kp UP &kp LEFT &mo 3 &kp SPACE &kp RET   &kp F11  &kp RBKT  &kp EQUAL
-
-/* encoder push:  L-top      L-bottom */
-&kp C_PP   &kp C_MUTE
             >;
-
-            /*
-             * Both encoders send F-keys (top F21/F22, bottom F20/F19). These
-             * sit above the default NKRO report's usage range and are silently
-             * dropped unless the dongle sets
-             * CONFIG_ZMK_HID_KEYBOARD_NKRO_EXTENDED_REPORT=y (it does). They
-             * show nothing in normal apps — bind them in macro/hotkey software.
-             */
-            sensor-bindings
-                = <&inc_dec_kp F22 F21>   /* 0  left top    */
-                , <&inc_dec_kp F19 F20>;  /* 1  left bottom */
         };
 
         layer_1 {
@@ -65,7 +48,6 @@
                 TRANS_ROW_24
                 TRANS_ROW_24
                 TRANS_ROW_20
-                TRANS_ENC
             >;
         };
 
@@ -75,7 +57,6 @@
                 TRANS_ROW_24
                 TRANS_ROW_24
                 TRANS_ROW_20
-                TRANS_ENC
             >;
         };
 
@@ -85,7 +66,6 @@
                 TRANS_ROW_24
                 TRANS_ROW_24
                 TRANS_ROW_20
-                TRANS_ENC
             >;
         };
 
@@ -95,7 +75,6 @@
                 TRANS_ROW_24
                 TRANS_ROW_24
                 TRANS_ROW_20
-                TRANS_ENC
             >;
         };
     };

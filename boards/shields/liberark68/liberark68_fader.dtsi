@@ -1,0 +1,51 @@
+/*
+ * LiberArk68 - 10k slide fader (shared by both halves).
+ *
+ * VIK-GP1 (P1.11) can't be sampled — no P1 pin reaches the nRF52840 SAADC —
+ * so each half's fader wiper goes to VIK-SDA = P0.04 = AIN2 instead
+ * (one outer leg to 3V3, the other to GND).
+ *
+ * Maps the ~0..3.3V wiper voltage to an absolute 0..100 value:
+ *   mv-mid = 0     -> report absolute position, not a centered joystick offset
+ *   scale 1/33     -> 3300 mV / 33 ~= 100
+ *   report-on-change-only quantizes to whole steps to limit chatter.
+ * Tune scale-divisor / add a taper curve once the pot travel is characterized.
+ */
+
+#include <zephyr/dt-bindings/adc/adc.h>
+#include <zephyr/dt-bindings/adc/nrf-saadc.h>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+&adc {
+    status = "okay";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    channel@2 {
+        reg = <2>;
+        zephyr,gain = "ADC_GAIN_1_6";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,input-positive = <NRF_SAADC_AIN2>;   /* P0.04 = VIK-SDA */
+        zephyr,resolution = <12>;
+        zephyr,oversampling = <0>;                  /* nRF52840 SAADC: must be 0 */
+    };
+};
+
+/ {
+    fader: analog_input_0 {
+        compatible = "zmk,analog-input";
+        sampling-hz = <50>;
+        x-ch {
+            io-channels = <&adc 2>;
+            mv-mid = <0>;
+            mv-min-max = <3300>;
+            mv-deadzone = <0>;
+            scale-multiplier = <1>;
+            scale-divisor = <33>;
+            evt-type = <INPUT_EV_ABS>;
+            input-code = <INPUT_ABS_X>;
+            report-on-change-only;
+        };
+    };
+};

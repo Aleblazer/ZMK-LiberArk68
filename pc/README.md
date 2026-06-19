@@ -35,15 +35,21 @@ dotnet publish -c Release -r win-x64 --self-contained false
 
 ### Calibration
 
-The pot is an S-taper *and* the firmware clamps its top travel to byte 254, so
-the byte→percent mapping is a piecewise curve (`Curve` in `MainForm.cs`), not
-linear. Its end points snap to a clean 0% / 100% so the bottom doesn't float on
-ADC noise and the top always reaches full volume.
+The pot is a strong S-taper, so the byte→percent mapping is a piecewise curve
+(`Curve` in `MainForm.cs`), not linear — it inverts the taper so the throw
+feels ~linear. The curve's end points are continuous dead bands (byte 0 → 0%,
+byte ≥ top → 100%), so the bottom rests cleanly and the top reaches full volume
+without a cliff.
 
-Each fader label shows a live `raw (min-max)` readout. To recalibrate: sweep
-both faders fully bottom-to-top once, note the observed min/max bytes, set
-`Curve`'s first point to `(min, 0)` and last to `(max, 100)`, and adjust the
-mids to taste.
+On the measured build the byte runs 0 (bottom) to ~248–250 (top); the top
+jitter is ADC noise, not the firmware `mv-min-max` clamp (the byte never
+reaches the 254 ceiling), so the top-of-travel coarseness is the pot's taper
+and no firmware change helps it — only a linear-taper pot would.
+
+Each fader label shows a live `raw (min-max)` readout. To recalibrate after a
+pot/wiring change: sweep both faders fully, note the observed min/max bytes,
+set `Curve`'s first point to `(min, 0)` and last to `(max, 100)`, and adjust
+the mids to taste.
 
 ## fader_read.py — optional Python byte-dumper
 

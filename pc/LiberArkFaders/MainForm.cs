@@ -15,15 +15,15 @@ public class MainForm : Form
 
     // Fader byte (0..254) -> volume percent. The slide pot is a strong S-taper,
     // so this piecewise curve inverts it to feel ~linear across the throw.
-    // The end points double as the dead-band edges, and the curve stays
-    // CONTINUOUS through them (no snap/cliff): bytes <= the first point read 0%
-    // (so the bottom rests cleanly past the ADC noise float) and bytes >= the
-    // last point read 100% (so the jittery, firmware-clamped top still reaches
-    // full volume). Recalibrate from the live "raw (min-max)" readouts: sweep
-    // each fader fully, then set the first/last points to the observed min/max
-    // and the mids to taste.
+    // Measured on this build: the bottom rests at a clean, stable 0, and the top
+    // saturates around 248-250 (the jitter there is ADC noise, NOT the firmware
+    // clamp -- the byte never reaches the 254 ceiling, so the pot's own taper is
+    // what limits the top, and no firmware change helps it). The end points are
+    // continuous dead bands -- ByteToPercent clamps past them, so byte 0 reads
+    // 0% and byte >= 247 reads 100% with no cliff. Recalibrate from the live
+    // "raw (min-max)" readouts if the pot or wiring changes.
     static readonly (int b, int pct)[] Curve =
-        { (3, 0), (11, 25), (124, 50), (241, 75), (245, 100) };
+        { (0, 0), (11, 25), (124, 50), (241, 75), (247, 100) };
 
     sealed class DeviceItem
     {

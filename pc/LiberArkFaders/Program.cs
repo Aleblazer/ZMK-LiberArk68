@@ -9,8 +9,6 @@ using HidSharp;
 // Use it to confirm both faders reach the PC and see which byte is the left
 // vs right slider. This console grows into the device-picker GUI next.
 
-const int HidIoUsagePage = 0xFF0C;
-
 var devices = DeviceList.Local.GetHidDevices().ToList();
 if (devices.Count == 0)
 {
@@ -18,7 +16,7 @@ if (devices.Count == 0)
     return;
 }
 
-static IEnumerable<int> UsagePages(HidDevice d)
+static SortedSet<int> UsagePages(HidDevice d)
 {
     var pages = new SortedSet<int>();
     try

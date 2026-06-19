@@ -5,17 +5,19 @@
  * so each half's fader wiper goes to VIK-SDA = P0.04 = AIN2 instead
  * (one outer leg to 3V3, the other to GND).
  *
- * Reports an absolute 0..255 value (high-res on purpose):
+ * Reports the absolute wiper voltage in mV (0..~3300) over hid-io's 16-bit
+ * joystick axis:
  *   mv-mid = 0     -> report absolute position, not a centered joystick offset
- *   scale 1/13     -> 3300 mV / 13 ~= 254
- *   report-on-change-only quantizes to whole steps to limit chatter.
+ *   scale 1/1      -> pass the raw mV straight through (no 8-bit crush)
+ *   report-on-change-only fires on any change.
  *
- * The pot is an S-taper, NOT linear (measured travel->raw: 0/25/50/75/100%
- * -> ~7/148/1831/3560/3732), so the middle of the throw covers ~90% of the
- * electrical range. We deliberately do NOT linearize here — the firmware
- * sends the raw-ish 0..255, and the PC app applies a piecewise-linear
- * calibration curve from those points. Keeping it high-res preserves what
- * little resolution the compressed ends have.
+ * The pot is sold as B103 (linear) 10k but reads strongly compressed at the top
+ * of travel (measured travel->mV: 0/25/50/75/100% -> ~7/148/1831/3560/3732), so
+ * the top third collapses into ~150 ADC counts. We do NOT linearize here -- the
+ * firmware sends the full-resolution mV and the PC app applies a piecewise-linear
+ * calibration curve. Sending 16-bit (vs the old 8-bit 0..254, which crushed that
+ * top to ~10 codes) preserves the resolution the compressed top still has.
+ * Longer ADC acquisition time settles the 10k source and trims sample noise.
  */
 
 #include <zephyr/dt-bindings/adc/adc.h>
@@ -40,7 +42,7 @@
         reg = <2>;
         zephyr,gain = "ADC_GAIN_1_6";
         zephyr,reference = "ADC_REF_INTERNAL";
-        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 40)>;
         zephyr,input-positive = <NRF_SAADC_AIN2>;   /* P0.04 = VIK-SDA */
         zephyr,resolution = <12>;
         zephyr,oversampling = <0>;                  /* nRF52840 SAADC: must be 0 */
@@ -57,7 +59,7 @@
             mv-min-max = <3300>;
             mv-deadzone = <0>;
             scale-multiplier = <1>;
-            scale-divisor = <13>;
+            scale-divisor = <1>;
             evt-type = <INPUT_EV_ABS>;
             input-code = <FADER_INPUT_CODE>;
             report-on-change-only;

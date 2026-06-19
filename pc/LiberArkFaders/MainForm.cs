@@ -13,17 +13,17 @@ public class MainForm : Form
 {
     const int VID = 0x1D50, PID = 0x615E;
 
-    // Fader byte (0..254) -> volume percent. The slide pot is a strong S-taper,
-    // so this piecewise curve inverts it to feel ~linear across the throw.
-    // Measured on this build: the bottom rests at a clean, stable 0, and the top
-    // saturates around 248-250 (the jitter there is ADC noise, NOT the firmware
-    // clamp -- the byte never reaches the 254 ceiling, so the pot's own taper is
-    // what limits the top, and no firmware change helps it). The end points are
-    // continuous dead bands -- ByteToPercent clamps past them, so byte 0 reads
-    // 0% and byte >= 247 reads 100% with no cliff. Recalibrate from the live
-    // "raw (min-max)" readouts if the pot or wiring changes.
-    static readonly (int b, int pct)[] Curve =
-        { (0, 0), (11, 25), (124, 50), (241, 75), (247, 100) };
+    // Fader value (raw wiper mV, ~0..3300 on a 16-bit axis) -> volume percent.
+    // The pot reads strongly compressed at the top, so this piecewise curve
+    // inverts that to feel ~linear across the throw. These points are the old
+    // 8-bit curve scaled by 13 (the previous mV/13 divisor) onto the new mV
+    // scale, so the body keeps the linear feel it had -- but with ~13x finer
+    // steps, the top no longer goes chunky. The end points are continuous dead
+    // bands (ValueToPercent clamps past them): value 0 reads 0%, value >= the
+    // last point reads 100%. Recalibrate from the live "raw (min-max)" readouts:
+    // sweep fully, set the last point to the observed top, mids to taste.
+    static readonly (int v, int pct)[] Curve =
+        { (0, 0), (143, 25), (1612, 50), (3133, 75), (3250, 100) };
 
     sealed class DeviceItem
     {
@@ -39,9 +39,9 @@ public class MainForm : Form
         public required ComboBox Combo;
         public required ProgressBar Bar;
         public required Label Lbl;
-        public double Sm = -1;          // EMA state (smoothed raw byte)
+        public double Sm = -1;          // EMA state (smoothed raw value)
         public int LastPct = -1;        // last percent pushed to the device (deadband)
-        public int Min = 255, Max = 0;  // observed raw range, for calibration
+        public int Min = int.MaxValue, Max = int.MinValue;  // observed raw range, for calibration
     }
 
     sealed class Settings
@@ -182,16 +182,16 @@ public class MainForm : Form
 
     // ---- calibration ------------------------------------------------------
 
-    static double ByteToPercent(int b)
+    static double ValueToPercent(int v)
     {
-        if (b <= Curve[0].b) return Curve[0].pct;
+        if (v <= Curve[0].v) return Curve[0].pct;
         for (int i = 1; i < Curve.Length; i++)
         {
-            if (b <= Curve[i].b)
+            if (v <= Curve[i].v)
             {
-                var (b0, p0) = Curve[i - 1];
-                var (b1, p1) = Curve[i];
-                return p0 + (double)(b - b0) / (b1 - b0) * (p1 - p0);
+                var (v0, p0) = Curve[i - 1];
+                var (v1, p1) = Curve[i];
+                return p0 + (double)(v - v0) / (v1 - v0) * (p1 - p0);
             }
         }
         return Curve[^1].pct;
@@ -199,24 +199,40 @@ public class MainForm : Form
 
     // ---- HID --------------------------------------------------------------
 
-    static SortedSet<int> UsagePages(HidDevice d)
+    // Generic Desktop (0x0001) / Joystick (0x0004). The keyboard shares this VID/PID
+    // and also sits on the Generic Desktop page, so match the Joystick usage exactly
+    // rather than guessing by report size (which moved when axes went 16-bit).
+    const uint JoystickUsage = 0x00010004;
+
+    static SortedSet<uint> Usages(HidDevice d)
     {
-        var pages = new SortedSet<int>();
+        var usages = new SortedSet<uint>();
         try
         {
             foreach (var item in d.GetReportDescriptor().DeviceItems)
                 foreach (var u in item.Usages.GetAllValues())
-                    pages.Add((int)(u >> 16));
+                    usages.Add(u);
         }
         catch { }
-        return pages;
+        return usages;
     }
 
-    static HidDevice? FindFader() =>
-        DeviceList.Local.GetHidDevices()
-            .Where(d => d.VendorID == VID && d.ProductID == PID && UsagePages(d).Contains(0x0001))
+    static HidDevice? FindFader()
+    {
+        var mine = DeviceList.Local.GetHidDevices()
+            .Where(d => d.VendorID == VID && d.ProductID == PID)
+            .ToArray();
+
+        // Prefer the collection that actually exposes the Joystick usage.
+        var joy = mine.FirstOrDefault(d => Usages(d).Contains(JoystickUsage));
+        if (joy != null) return joy;
+
+        // Fallback: smallest input report on the Generic Desktop page.
+        return mine
+            .Where(d => Usages(d).Any(u => (u >> 16) == 0x0001))
             .OrderBy(d => d.GetMaxInputReportLength())
             .FirstOrDefault();
+    }
 
     void StartHid()
     {
@@ -245,11 +261,17 @@ public class MainForm : Form
                     try { n = stream.Read(buf, 0, buf.Length); }
                     catch (TimeoutException) { continue; }
                     catch { break; } // disconnected — fall out and re-find
-                    if (n >= 3) OnFaders(buf[1], buf[2]);
+                    // Report id 2: [1..2] = left axis, [3..4] = right axis, each
+                    // signed 16-bit little-endian (raw wiper mV, ~0..3300).
+                    if (n >= 5 && buf[0] == 0x02)
+                        OnFaders(ReadAxis(buf, 1), ReadAxis(buf, 3));
                 }
             }
         }
     }
+
+    // Signed 16-bit little-endian axis at offset i.
+    static int ReadAxis(byte[] b, int i) => (short)(b[i] | (b[i + 1] << 8));
 
     void OnFaders(int left, int right)
     {
@@ -266,12 +288,13 @@ public class MainForm : Form
         if (raw < a.Min) a.Min = raw;
         if (raw > a.Max) a.Max = raw;
 
-        // Smooth the raw byte (EMA) for a stable reading, then map through the
-        // curve. ByteToPercent clamps to the end points, so the dead bands at
-        // 0% / 100% are continuous with the body — no cliff.
-        a.Sm = a.Sm < 0 ? raw : a.Sm * 0.7 + raw * 0.3;
-        int b = (int)Math.Round(a.Sm);
-        int p = Math.Clamp((int)Math.Round(ByteToPercent(b)), 0, 100);
+        // Smooth the raw value (EMA), then map through the curve. The 16-bit
+        // value is finer but noisier (~+/-15 counts of ADC noise), so smooth
+        // harder than the old 8-bit path did. ValueToPercent clamps to the end
+        // points, so the dead bands at 0% / 100% are continuous — no cliff.
+        a.Sm = a.Sm < 0 ? raw : a.Sm * 0.85 + raw * 0.15;
+        int v = (int)Math.Round(a.Sm);
+        int p = Math.Clamp((int)Math.Round(ValueToPercent(v)), 0, 100);
 
         a.Bar.Value = p;
         a.Lbl.Text = $"{p}%   raw {raw} ({a.Min}-{a.Max})";

@@ -1,10 +1,12 @@
 # LiberArk68 PC companion
 
 Host-side app for the dual-fader volume variant. The dongle exposes the two
-slide faders as a HID joystick (Generic Desktop, report id 2 — byte 1 = left,
-byte 2 = right, each 0..254) via a [fork of zmk-hid-io](https://github.com/Aleblazer/zmk-hid-io/tree/absolute-faders)
-patched to forward absolute axes. The app reads that and sets the volume of two
-chosen Windows output devices.
+slide faders as a HID joystick (Generic Desktop, report id 2 — X = left,
+Y = right, each a signed 16-bit little-endian axis carrying the raw wiper
+voltage ~0..3300) via a [fork of zmk-hid-io](https://github.com/Aleblazer/zmk-hid-io/tree/absolute-faders)
+patched to forward absolute axes and widened to 16-bit. So in the raw report:
+bytes 1–2 = left, bytes 3–4 = right. The app reads that and sets the volume of
+two chosen Windows output devices.
 
 ## LiberArkFaders (C# / WinForms)
 
@@ -35,21 +37,20 @@ dotnet publish -c Release -r win-x64 --self-contained false
 
 ### Calibration
 
-The pot is a strong S-taper, so the byte→percent mapping is a piecewise curve
-(`Curve` in `MainForm.cs`), not linear — it inverts the taper so the throw
-feels ~linear. The curve's end points are continuous dead bands (byte 0 → 0%,
-byte ≥ top → 100%), so the bottom rests cleanly and the top reaches full volume
-without a cliff.
+The pot reads strongly compressed at the top of travel, so the value→percent
+mapping is a piecewise curve (`Curve` in `MainForm.cs`), not linear — it inverts
+that so the throw feels ~linear. The firmware now sends the raw wiper voltage
+(~0..3300) over a 16-bit axis instead of an 8-bit 0..254, so the compressed top
+keeps its ~150 ADC counts (it was crushed to ~10), and the curve's fine steps no
+longer go chunky. The end points are continuous dead bands (value 0 → 0%,
+value ≥ the last point → 100%), so the bottom rests cleanly and the top reaches
+full volume without a cliff.
 
-On the measured build the byte runs 0 (bottom) to ~248–250 (top); the top
-jitter is ADC noise, not the firmware `mv-min-max` clamp (the byte never
-reaches the 254 ceiling), so the top-of-travel coarseness is the pot's taper
-and no firmware change helps it — only a linear-taper pot would.
-
-Each fader label shows a live `raw (min-max)` readout. To recalibrate after a
-pot/wiring change: sweep both faders fully, note the observed min/max bytes,
-set `Curve`'s first point to `(min, 0)` and last to `(max, 100)`, and adjust
-the mids to taste.
+The 16-bit value is finer but noisier (~±15 counts of ADC noise), so the app
+smooths harder before mapping. Each fader label shows a live `raw (min-max)`
+readout. To recalibrate after a pot/wiring change: sweep both faders fully, note
+the observed min/max, set `Curve`'s first point to `(min, 0)` and last to
+`(max, 100)`, and adjust the mids to taste.
 
 ## fader_read.py — optional Python byte-dumper
 

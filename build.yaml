@@ -9,12 +9,10 @@ include:
     cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
     artifact-name: liberark68_right
   # Dongle: third Xiao + Prospector adapter (ST7789), new status screens.
-  # DIAGNOSTIC: Studio (studio-rpc-usb-uart + CONFIG_ZMK_STUDIO) temporarily
-  # removed so the USB-CDC console is free for fader-pipeline logging. Restore
-  # both once the faders are flowing.
   - board: xiao_ble//zmk
     shield: liberark68_dongle prospector_adapter
-    cmake-args: -DCONFIG_ZMK_SPLIT=y
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
     artifact-name: liberark68_dongle
   # Settings wipe image — all three boards are Xiao nRF52840 again.
   # Flash, wait ~5s, then re-flash normal firmware.

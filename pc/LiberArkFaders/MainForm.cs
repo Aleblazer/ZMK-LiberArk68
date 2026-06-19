@@ -20,10 +20,13 @@ public class MainForm : Form
     // scale, so the body keeps the linear feel it had -- but with ~13x finer
     // steps, the top no longer goes chunky. The end points are continuous dead
     // bands (ValueToPercent clamps past them): value 0 reads 0%, value >= the
-    // last point reads 100%. Recalibrate from the live "raw (min-max)" readouts:
-    // sweep fully, set the last point to the observed top, mids to taste.
+    // last point reads 100%. Measured jitter bands: bottom 0-3 (so 0% lands at
+    // 4, just above it), top 3220-3249 (so 100% lands at 3215, just below the
+    // band floor -- the smoothed value can't dip under it, so no flicker and
+    // full volume is always reached). Recalibrate from the live "raw (min-max)"
+    // readouts: sweep fully, set the ends just outside each band, mids to taste.
     static readonly (int v, int pct)[] Curve =
-        { (0, 0), (143, 25), (1612, 50), (3133, 75), (3250, 100) };
+        { (4, 0), (143, 25), (1612, 50), (3133, 75), (3215, 100) };
 
     sealed class DeviceItem
     {

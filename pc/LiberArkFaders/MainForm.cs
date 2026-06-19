@@ -14,19 +14,16 @@ public class MainForm : Form
     const int VID = 0x1D50, PID = 0x615E;
 
     // Fader byte (0..254) -> volume percent. The slide pot is a strong S-taper,
-    // so this piecewise curve inverts it to feel ~linear across the throw. The
-    // mids are the measured travel points; only the extreme ends are snapped
-    // (see RestFloor / FullCeil) so the body of the curve stays linear-feeling:
-    //   - resting at the bottom floats a couple counts of ADC noise -> snap 0%
-    //   - the firmware clamps top travel at byte 254 and it jitters a few counts
-    //     below that -> snap 100% so full volume is always reachable, no flicker
-    // Recalibrate from the live "raw (min-max)" readouts: sweep each fader fully,
-    // then set the mids to the observed bytes and RestFloor/FullCeil to the ends.
+    // so this piecewise curve inverts it to feel ~linear across the throw.
+    // The end points double as the dead-band edges, and the curve stays
+    // CONTINUOUS through them (no snap/cliff): bytes <= the first point read 0%
+    // (so the bottom rests cleanly past the ADC noise float) and bytes >= the
+    // last point read 100% (so the jittery, firmware-clamped top still reaches
+    // full volume). Recalibrate from the live "raw (min-max)" readouts: sweep
+    // each fader fully, then set the first/last points to the observed min/max
+    // and the mids to taste.
     static readonly (int b, int pct)[] Curve =
-        { (0, 0), (10, 25), (124, 50), (241, 75), (254, 100) };
-
-    const int RestFloor = 3;    // smoothed raw <= this -> 0%   (clears resting float)
-    const int FullCeil = 245;   // smoothed raw >= this -> 100% (clears top jitter)
+        { (3, 0), (11, 25), (124, 50), (241, 75), (245, 100) };
 
     sealed class DeviceItem
     {
@@ -269,14 +266,12 @@ public class MainForm : Form
         if (raw < a.Min) a.Min = raw;
         if (raw > a.Max) a.Max = raw;
 
-        // Smooth the raw byte (EMA) so the end snaps act on a stable value, then
-        // map through the curve. The snaps only touch the extreme ends so the
-        // body stays linear-feeling.
+        // Smooth the raw byte (EMA) for a stable reading, then map through the
+        // curve. ByteToPercent clamps to the end points, so the dead bands at
+        // 0% / 100% are continuous with the body — no cliff.
         a.Sm = a.Sm < 0 ? raw : a.Sm * 0.7 + raw * 0.3;
         int b = (int)Math.Round(a.Sm);
-        int p = b <= RestFloor ? 0
-              : b >= FullCeil ? 100
-              : Math.Clamp((int)Math.Round(ByteToPercent(b)), 0, 100);
+        int p = Math.Clamp((int)Math.Round(ByteToPercent(b)), 0, 100);
 
         a.Bar.Value = p;
         a.Lbl.Text = $"{p}%   raw {raw} ({a.Min}-{a.Max})";

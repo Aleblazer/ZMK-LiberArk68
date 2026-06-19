@@ -30,6 +30,12 @@ public class MainForm : Form
     static readonly (int v, int pct)[] Curve =
         { (4, 0), (143, 25), (1612, 50), (3133, 75), (3215, 100) };
 
+    // Output hysteresis (percent): once a volume % is shown, hold it until the
+    // value moves more than this off it. Stops noise that sits on a boundary
+    // (e.g. ~8.5%) from flip-flopping between two adjacent percentages. Must be
+    // < 1 so real moves still register as clean 1% steps.
+    const double Hyst = 0.9;
+
     sealed class DeviceItem
     {
         public required string Id;
@@ -344,12 +350,18 @@ public class MainForm : Form
         int v = (int)Math.Round(a.Sm);
         double faderPct = ValueToPercent(v);                  // 0..100 fader position
         int cap = (int)a.Limit.Value;                         // max output volume %
-        int applied = Math.Clamp((int)Math.Round(faderPct * cap / 100.0), 0, 100);
+        double pf = Math.Clamp(faderPct * cap / 100.0, 0, 100);  // continuous applied %
+
+        // Hysteresis: keep the current integer % unless the value has moved more
+        // than Hyst off it, so boundary noise (~8.5%) can't flip-flop 8<->9.
+        int applied = a.LastApplied < 0 || Math.Abs(pf - a.LastApplied) > Hyst
+            ? (int)Math.Round(pf)
+            : a.LastApplied;
 
         a.Bar.Value = applied;
         a.Lbl.Text = $"{applied}%   raw {a.LastRaw} ({a.RawMin}-{a.RawMax})";
 
-        if (applied == a.LastApplied) return;   // deadband: only push 1% steps
+        if (applied == a.LastApplied) return;   // unchanged after hysteresis
         a.LastApplied = applied;
         if (a.Combo.SelectedItem is DeviceItem di)
         {

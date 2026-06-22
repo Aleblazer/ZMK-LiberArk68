@@ -25,9 +25,10 @@ manifest:
     # Fork with absolute-axis support in the joystick forwarder (for the
     # slide faders); upstream only forwards relative movement. Faders are
     # emitted under a vendor page (0xFF00) so Windows doesn't treat the device
-    # as a game controller.
+    # as a game controller, plus an optional USB heartbeat to re-send the
+    # latched axes at rest. Pinned to the commit to bypass the module cache.
     - name: zmk-hid-io
       remote: aleblazer
-      revision: absolute-faders
+      revision: 66c9f73
   self:
     path: config

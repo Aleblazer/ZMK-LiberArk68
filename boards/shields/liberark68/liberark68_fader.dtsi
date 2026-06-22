@@ -75,7 +75,7 @@
              * goes quiet. Raise report-threshold if resting noise still keeps it
              * awake; lower it (toward the noise floor) once the grounding/0.1uF
              * fix is in. */
-            report-threshold = <20>;
+            report-threshold = <30>;
             report-settle-samples = <300>;
         };
     };

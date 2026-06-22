@@ -20,11 +20,11 @@ manifest:
       remote: badjeff
       revision: main
     # Fork with absolute-axis support in the joystick forwarder (for the
-    # slide faders); upstream only forwards relative movement.
-    # Temporarily pinned to the vendor-page descriptor commit to bypass the
-    # module cache; revert to `absolute-faders` once the build is green.
+    # slide faders); upstream only forwards relative movement. Faders are
+    # emitted under a vendor page (0xFF00) so Windows doesn't treat the device
+    # as a game controller.
     - name: zmk-hid-io
       remote: aleblazer
-      revision: 3296f78
+      revision: absolute-faders
   self:
     path: config

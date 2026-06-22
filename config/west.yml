@@ -21,7 +21,7 @@ manifest:
     # the commit so the module cache can't serve the un-patched upstream.
     - name: zmk-analog-input-driver
       remote: aleblazer
-      revision: cfd1497
+      revision: 0cac587
     # Fork with absolute-axis support in the joystick forwarder (for the
     # slide faders); upstream only forwards relative movement. Faders are
     # emitted under a vendor page (0xFF00) so Windows doesn't treat the device

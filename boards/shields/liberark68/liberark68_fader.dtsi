@@ -70,11 +70,13 @@
              * wiper has stayed within report-threshold mV of its anchor for
              * report-settle-samples in a row, so the peripheral can deep-sleep.
              * report-threshold is just the rest/wake band (~ the noise floor), not
-             * a movement quantizer. At 30 Hz, 45 samples ~= 1.5 s of stillness.
-             * Raise report-threshold if resting noise still keeps it awake; lower
-             * it (toward the noise floor) once the grounding/0.1uF fix is in. */
-            report-threshold = <12>;
-            report-settle-samples = <45>;
+             * a movement quantizer. At 30 Hz, 300 samples ~= 10 s of stillness,
+             * which keeps full resolution through a fine-tuning session before it
+             * goes quiet. Raise report-threshold if resting noise still keeps it
+             * awake; lower it (toward the noise floor) once the grounding/0.1uF
+             * fix is in. */
+            report-threshold = <20>;
+            report-settle-samples = <300>;
         };
     };
 };

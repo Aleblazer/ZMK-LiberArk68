@@ -65,6 +65,13 @@
             evt-type = <INPUT_EV_ABS>;
             input-code = <FADER_INPUT_CODE>;
             report-on-change-only;
+            /* Deadband (in mV, since scale is 1/1): don't emit a report unless the
+             * wiper moved at least this far from the last reported value. Stops
+             * resting jitter from streaming events, which otherwise keeps the
+             * peripheral awake (never idling into deep sleep). Raise if it still
+             * won't sleep; lower for finer top-of-travel resolution once the
+             * grounding/0.1uF noise fix is in. */
+            report-threshold = <12>;
         };
     };
 };

@@ -21,8 +21,10 @@ manifest:
       revision: main
     # Fork with absolute-axis support in the joystick forwarder (for the
     # slide faders); upstream only forwards relative movement.
+    # Temporarily pinned to the vendor-page descriptor commit to bypass the
+    # module cache; revert to `absolute-faders` once the build is green.
     - name: zmk-hid-io
       remote: aleblazer
-      revision: absolute-faders
+      revision: 3296f78
   self:
     path: config

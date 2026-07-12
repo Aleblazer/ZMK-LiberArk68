@@ -31,6 +31,6 @@ manifest:
     # cache (bump the SHA whenever the fork changes).
     - name: zmk-hid-io
       remote: aleblazer
-      revision: afc0888
+      revision: 94d7ddc
   self:
     path: config

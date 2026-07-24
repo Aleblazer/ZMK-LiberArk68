@@ -1,27 +1,48 @@
 /*
- * LiberArk68 - 10k slide fader (shared by both halves).
+ * LiberArk68 - 10k slide fader on the VIK fader add-on board (shared by both
+ * halves). Replaces the original nRF SAADC wiring, where the wiper went
+ * straight to P0.04 = AIN2 and the pot sat across 3V3 permanently.
  *
- * VIK-GP1 (P1.11) can't be sampled — no P1 pin reaches the nRF52840 SAADC —
- * so each half's fader wiper goes to VIK-SDA = P0.04 = AIN2 instead
- * (one outer leg to 3V3, the other to GND).
+ * Xiao nRF52840 pins used here (none clash with the kscan, which owns
+ * D0..D3 + D8 + D10):
+ *   D4 = P0.04 = VIK-SDA
+ *   D5 = P0.05 = VIK-SCL
+ *   D6 = P1.11 = VIK-GP1 = ADS1115 ALERT/RDY   (unused, see below)
+ *   D7 = P1.12 = VIK-GP2 = pot excitation gate
  *
- * Reports the absolute wiper voltage in mV (0..~3300) over hid-io's 16-bit
- * joystick axis:
- *   mv-mid = 0     -> report absolute position, not a centered joystick offset
- *   scale 1/1      -> pass the raw mV straight through (no 8-bit crush)
- *   report-on-change-only fires on any change.
+ * Board (VikFader75 / VikFader4530, see the VIK-Fader repo):
  *
- * The pot is sold as B103 (linear) 10k but reads strongly compressed at the top
- * of travel (measured travel->mV: 0/25/50/75/100% -> ~7/148/1831/3560/3732), so
- * the top third collapses into ~150 ADC counts. We do NOT linearize here -- the
- * firmware sends the full-resolution mV and the PC app applies a piecewise-linear
- * calibration curve. Sending 16-bit (vs the old 8-bit 0..254, which crushed that
- * top to ~10 codes) preserves the resolution the compressed top still has.
- * Longer ADC acquisition time settles the 10k source and trims sample noise.
+ *   ADS1115IDGS, ADDR tied to GND -> I2C address 0x48. The Xiao's i2c1 is
+ *   already SDA = P0.04 / SCL = P0.05, which is exactly where the VIK connector
+ *   lands, so no pinctrl override is needed. 10k pull-ups are on the add-on.
+ *
+ *   Wiper -> 100R -> AIN0, with 0.1uF to GND. That RC is tau ~= 260 us against
+ *   the pot's 2.5k worst-case source impedance, hence power-settle-us below.
+ *   AIN1..AIN3 are grounded (this board carries one fader).
+ *
+ *   Q1 (DMG2305UX, P-channel) switches the pot's top leg from +3V3. Its gate is
+ *   pulled up 100k and driven through 1k from VIK-GP2 = P1.12, so the gate is
+ *   ACTIVE LOW and the pot is unpowered whenever the pin is released.
+ *
+ *   ALERT/RDY lands on VIK-GP1 = P1.11 with a 10k pull-up, but Zephyr 3.5's
+ *   ads1x1x driver has no ALERT/RDY support - it sleeps the conversion time and
+ *   then polls the config register's OS bit - so firmware leaves P1.11 alone.
+ *
+ * Why this is worth the extra part: the pot across 3V3 draws ~330 uA and it
+ * used to draw it continuously, which dwarfed everything else on a wireless
+ * half. Gated, it only draws during a sample, so the cost becomes the sample
+ * rate (see idle-sampling-hz).
+ *
+ * Reporting is unchanged from the SAADC version: absolute wiper voltage in mV
+ * (0..3300) over hid-io's 16-bit joystick axis, so the PC app's existing
+ * piecewise-linear calibration curve still applies. The pot is sold as B103
+ * (linear) but reads strongly compressed at the top of travel, and that is a
+ * property of the pot, not the ADC - we still do not linearize in firmware.
  */
 
 #include <zephyr/dt-bindings/adc/adc.h>
-#include <zephyr/dt-bindings/adc/nrf-saadc.h>
+#include <zephyr/dt-bindings/gpio/gpio.h>
+#include <zephyr/dt-bindings/i2c/i2c.h>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
 /*
@@ -33,30 +54,71 @@
 #define FADER_INPUT_CODE INPUT_ABS_X
 #endif
 
-&adc {
+&i2c1 {
     status = "okay";
-    #address-cells = <1>;
-    #size-cells = <0>;
+    /* Fast mode: the ADS1115 handles 400 kHz, and shortening each transfer
+     * shortens the window the pot is powered for. */
+    clock-frequency = <I2C_BITRATE_FAST>;
 
-    channel@2 {
-        reg = <2>;
-        zephyr,gain = "ADC_GAIN_1_6";
-        zephyr,reference = "ADC_REF_INTERNAL";
-        zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_MICROSECONDS, 40)>;
-        zephyr,input-positive = <NRF_SAADC_AIN2>;   /* P0.04 = VIK-SDA */
-        zephyr,resolution = <12>;
-        zephyr,oversampling = <0>;                  /* nRF52840 SAADC: must be 0 */
+    fader_adc: ads1115@48 {
+        compatible = "ti,ads1115";
+        reg = <0x48>;
+        #io-channel-cells = <1>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        /*
+         * The driver only accepts channel id 0, so this must stay channel@0
+         * regardless of which AIN pin is muxed in via zephyr,input-positive.
+         */
+        channel@0 {
+            reg = <0>;
+            /* Gain 1/2 = PGA full scale +/-4.096 V. The part defaults to
+             * +/-2.048 V, which would clip everything above ~62% of travel. */
+            zephyr,gain = "ADC_GAIN_1_2";
+            /* The only reference the driver accepts (2048 mV bandgap). */
+            zephyr,reference = "ADC_REF_INTERNAL";
+            /* Acquisition time is the data-rate index for this part: 7 = 860 SPS
+             * = 1.16 ms per conversion. The fastest rate keeps the pot powered
+             * for the shortest time, and at ~50 uVrms its noise is still two
+             * orders of magnitude under our 1 mV reporting step. */
+            zephyr,acquisition-time = <ADC_ACQ_TIME(ADC_ACQ_TIME_TICKS, 7)>;
+            /* AIN0, single-ended. Single-ended costs the sign bit, so the
+             * sequence runs at 15 bits - see CONFIG_ANALOG_INPUT_ADC_RES=15 in
+             * the half .conf files, which the driver checks exactly. */
+            zephyr,input-positive = <0>;
+            zephyr,resolution = <15>;
+        };
     };
 };
 
 / {
     fader: analog_input_0 {
         compatible = "zmk,analog-input";
-        /* 30 Hz is plenty for a volume fader; lower than the old 50 to cut the
-         * peripherals' BLE report rate (battery) with no perceptible lag. */
+        /*
+         * Rate while the fader is being moved. 30 Hz is plenty for a volume
+         * fader and keeps the peripheral's BLE report rate down.
+         */
         sampling-hz = <30>;
+        /*
+         * Rate once the fader has gone quiet. This is the battery number: each
+         * sample powers the pot for settle + conversion (~3.8 ms at ~330 uA),
+         * so ~38 uA average at 30 Hz but ~13 uA at 10 Hz - against ~330 uA
+         * continuous before the FET. The cost is up to 100 ms before the first
+         * movement is noticed, which is under the time it takes to actually
+         * move a fader. Drop to 5 Hz if runtime matters more than first-touch
+         * feel.
+         */
+        idle-sampling-hz = <10>;
+        /* P-FET gate on VIK-GP2 = P1.12; active low (see header). */
+        power-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
+        /* ~5 time constants of the 100R/0.1uF filter against the pot's 2.5k
+         * worst-case source impedance, plus margin for FET turn-on. Reading
+         * early biases the sample low and makes the fader lag. */
+        power-settle-us = <2000>;
+
         x-ch {
-            io-channels = <&adc 2>;
+            io-channels = <&fader_adc 0>;
             mv-mid = <0>;
             mv-min-max = <3300>;
             mv-deadzone = <0>;
@@ -65,18 +127,25 @@
             evt-type = <INPUT_EV_ABS>;
             input-code = <FADER_INPUT_CODE>;
             report-on-change-only;
-            /* Settle mode: report every change while moving (full 16-bit
-             * resolution, including the compressed ends), then go quiet once the
+            /*
+             * Settle mode: report every change while moving (full resolution,
+             * including the compressed top of travel), then go quiet once the
              * wiper has stayed within report-threshold mV of its anchor for
-             * report-settle-samples in a row, so the peripheral can deep-sleep.
-             * report-threshold is just the rest/wake band (~ the noise floor), not
-             * a movement quantizer. At 30 Hz, 300 samples ~= 10 s of stillness,
-             * which keeps full resolution through a fine-tuning session before it
-             * goes quiet. Raise report-threshold if resting noise still keeps it
-             * awake; lower it (toward the noise floor) once the grounding/0.1uF
-             * fix is in. */
-            report-threshold = <30>;
-            report-settle-samples = <300>;
+             * report-settle-samples in a row, so the peripheral can deep-sleep
+             * and the sample rate can drop to idle-sampling-hz.
+             *
+             * report-threshold is the rest/wake band, not a movement quantizer.
+             * The SAADC needed 30 mV to sit still; the ADS1115 behind the RC
+             * filter should be well under 1 mV of noise, so this starts at 8 mV
+             * mostly to absorb 3V3 rail drift (the ADC reference is its own
+             * bandgap, so the reading is NOT ratiometric to the pot's supply).
+             * Once measured on hardware this can likely go to 3-5 mV; raise it
+             * if the fader never goes idle at rest.
+             *
+             * 60 samples at 30 Hz ~= 2 s of stillness before going quiet.
+             */
+            report-threshold = <8>;
+            report-settle-samples = <60>;
         };
     };
 };

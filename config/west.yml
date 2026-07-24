@@ -16,12 +16,16 @@ manifest:
     - name: prospector-zmk-module
       remote: carrefinho
       revision: feat/new-status-screens
-    # Fork adds per-channel report-threshold (deadband) so the noisy slide-pot
-    # input goes quiet at rest and the wireless halves can deep-sleep. Pinned to
-    # the commit so the module cache can't serve the un-patched upstream.
+    # Fork adds per-channel report-threshold (deadband) so the slide-pot input
+    # goes quiet at rest and the wireless halves can deep-sleep, plus what the
+    # I2C-ADC fader board needs: the channel's devicetree gain is used for the
+    # mV conversion (the old code hardcoded the nRF SAADC's), a power-gpios FET
+    # gate powers the pot only while sampling, and idle-sampling-hz slows the
+    # poll once the fader is quiet. Pinned to the commit so the module cache
+    # can't serve the un-patched upstream.
     - name: zmk-analog-input-driver
       remote: aleblazer
-      revision: 0cac587
+      revision: 3c83111
     # Fork with absolute-axis support in the joystick forwarder (for the
     # slide faders); upstream only forwards relative movement. Faders are
     # emitted entirely under a vendor page (0xFF00) -- axes and buttons included,

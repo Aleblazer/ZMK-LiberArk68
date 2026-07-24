@@ -135,16 +135,24 @@
              * and the sample rate can drop to idle-sampling-hz.
              *
              * report-threshold is the rest/wake band, not a movement quantizer.
-             * The SAADC needed 30 mV to sit still; the ADS1115 behind the RC
-             * filter should be well under 1 mV of noise, so this starts at 8 mV
-             * mostly to absorb 3V3 rail drift (the ADC reference is its own
-             * bandgap, so the reading is NOT ratiometric to the pot's supply).
-             * Once measured on hardware this can likely go to 3-5 mV; raise it
-             * if the fader never goes idle at rest.
+             * It has to sit ABOVE the resting noise swing: the settle counter
+             * below wants report-settle-samples *consecutive* in-band samples,
+             * so every excursion past the band resets it. Set it too tight and
+             * the channel never goes idle at all.
+             *
+             * Measured on hardware: the SAADC swung 20-30 mV at rest (hence its
+             * 30 mV band); this front end swings 5-6 mV, worst at the top of
+             * travel. 8 mV settled but took ~5 s instead of the intended 2 s -
+             * i.e. the counter was being reset a few times on the way. 12 mV
+             * clears the swing properly and still leaves the wake band at 0.36%
+             * of travel, imperceptible on a volume fader.
+             *
+             * Note the reading is NOT ratiometric to the pot's supply - the ADC
+             * references its own bandgap - so this also absorbs 3V3 rail drift.
              *
              * 60 samples at 30 Hz ~= 2 s of stillness before going quiet.
              */
-            report-threshold = <8>;
+            report-threshold = <12>;
             report-settle-samples = <60>;
         };
     };

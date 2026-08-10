@@ -13,7 +13,8 @@ manifest:
       import: app/west.yml
     - name: prospector-zmk-module
       remote: aleblazer
-      revision: codex/ili9341-port
+      # Diagnostic ILI9341 build with display inversion enabled.
+      revision: 6837847bbeeca7548b193e2efdfa6ca0796138a7
     # Fork adds per-channel report-threshold (deadband) so the slide-pot input
     # goes quiet at rest and the wireless halves can deep-sleep, plus what the
     # I2C-ADC fader board needs: the channel's devicetree gain is used for the

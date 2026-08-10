@@ -8,7 +8,7 @@ include:
     shield: liberark68_right
     cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
     artifact-name: liberark68_right
-  # Dongle: third Xiao + Prospector adapter (ST7789), new status screens.
+  # Dongle: third Xiao + Prospector adapter (ILI9341 320x240), new status screens.
   - board: xiao_ble//zmk
     shield: liberark68_dongle prospector_adapter
     snippet: studio-rpc-usb-uart

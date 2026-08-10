@@ -2,8 +2,6 @@ manifest:
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-    - name: carrefinho
-      url-base: https://github.com/carrefinho
     - name: badjeff
       url-base: https://github.com/badjeff
     - name: aleblazer
@@ -14,8 +12,8 @@ manifest:
       revision: main
       import: app/west.yml
     - name: prospector-zmk-module
-      remote: carrefinho
-      revision: feat/new-status-screens
+      remote: aleblazer
+      revision: codex/ili9341-port
     # Fork adds per-channel report-threshold (deadband) so the slide-pot input
     # goes quiet at rest and the wireless halves can deep-sleep, plus what the
     # I2C-ADC fader board needs: the channel's devicetree gain is used for the

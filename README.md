@@ -32,8 +32,10 @@ the dongle Xiao as follows:
 | `TP_VCC` | 3.3 V |
 | `TP_GND` | GND |
 
-This initial test converts absolute touch coordinates into cursor movement.
-Tap-to-click and multitouch gestures are intentionally not enabled yet.
+This test converts absolute touch coordinates into cursor movement. For the
+display's landscape orientation, horizontal movement is inverted and both axes
+are scaled to 2.5x. Tap-to-click and multitouch gestures are intentionally not
+enabled yet.
 
 ## Firmware
 

@@ -11,6 +11,8 @@
 
 #include "liberark68.dtsi"
 #include <behaviors/input_processor_absolute_to_relative.dtsi>
+#include <input/processors.dtsi>
+#include <dt-bindings/zmk/input_transform.h>
 
 /*
  * FT6336 capacitive touch controller on the display module.
@@ -75,6 +77,9 @@
     touch_listener: touch_listener {
         compatible = "zmk,input-listener";
         device = <&touch_sensor>;
-        input-processors = <&zip_absolute_to_relative>;
+        /* Landscape calibration: invert X and amplify both axes by 2.5x. */
+        input-processors = <&zip_absolute_to_relative>,
+                           <&zip_xy_transform INPUT_TRANSFORM_X_INVERT>,
+                           <&zip_xy_scaler 5 2>;
     };
 };

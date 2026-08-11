@@ -10,9 +10,6 @@
  */
 
 #include "liberark68.dtsi"
-#include <behaviors/input_processor_absolute_to_relative.dtsi>
-#include <input/processors.dtsi>
-#include <dt-bindings/zmk/input_transform.h>
 
 /*
  * FT6336 capacitive touch controller on the display module.
@@ -23,19 +20,26 @@
  *   TP_INT -> Xiao D0 / P0.02
  *   TP_RST -> Xiao D1 / P0.03
  *
- * Zephyr's FT5336-family driver explicitly supports FT6x36 controllers.
- * It reports the first contact as absolute coordinates; the listener below
- * converts successive positions to relative HID mouse movement.
+ * The LiberArk touchpad driver reads both FT6336 contacts and emits relative
+ * pointer, mouse-button, and scroll events directly into ZMK.
  */
 &i2c1 {
     status = "okay";
 
     touch_sensor: ft6336@38 {
-        compatible = "focaltech,ft5336";
+        compatible = "liberark,ft6336-touchpad";
         reg = <0x38>;
         status = "okay";
         int-gpios = <&xiao_d 0 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
         reset-gpios = <&xiao_d 1 GPIO_ACTIVE_LOW>;
+        invert-x;
+        pointer-multiplier = <5>;
+        pointer-divisor = <2>;
+        scroll-divisor = <12>;
+        tap-time-ms = <220>;
+        tap-move-threshold = <12>;
+        scroll-start-threshold = <6>;
+        click-release-ms = <12>;
     };
 };
 
@@ -77,9 +81,5 @@
     touch_listener: touch_listener {
         compatible = "zmk,input-listener";
         device = <&touch_sensor>;
-        /* Landscape calibration: invert X and amplify both axes by 2.5x. */
-        input-processors = <&zip_absolute_to_relative>,
-                           <&zip_xy_transform INPUT_TRANSFORM_X_INVERT>,
-                           <&zip_xy_scaler 5 2>;
     };
 };

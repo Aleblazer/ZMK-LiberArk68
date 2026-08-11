@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: MIT
+
+description: FT6336 two-contact capacitive touch controller used as a touchpad
+
+compatible: "liberark,ft6336-touchpad"
+
+include: i2c-device.yaml
+
+properties:
+  int-gpios:
+    type: phandle-array
+    required: true
+    description: Active-low touch-data interrupt
+
+  reset-gpios:
+    type: phandle-array
+    required: true
+    description: Active-low controller reset
+
+  invert-x:
+    type: boolean
+    description: Invert horizontal pointer movement after landscape rotation
+
+  pointer-multiplier:
+    type: int
+    default: 5
+    description: Pointer delta multiplier
+
+  pointer-divisor:
+    type: int
+    default: 2
+    description: Pointer delta divisor
+
+  scroll-divisor:
+    type: int
+    default: 12
+    description: Two-finger centroid pixels per scroll step
+
+  tap-time-ms:
+    type: int
+    default: 220
+    description: Maximum contact duration recognized as a tap
+
+  tap-move-threshold:
+    type: int
+    default: 12
+    description: Maximum movement in pixels recognized as a tap
+
+  scroll-start-threshold:
+    type: int
+    default: 6
+    description: Two-finger movement required before scrolling starts
+
+  click-release-ms:
+    type: int
+    default: 12
+    description: Duration of the generated mouse-button press

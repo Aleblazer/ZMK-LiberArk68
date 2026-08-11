@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: MIT
+
+menu "LiberArk input drivers"
+
+config INPUT_FT6336_TOUCHPAD
+    bool "FT6336 two-contact touchpad"
+    default y
+    depends on DT_HAS_LIBERARK_FT6336_TOUCHPAD_ENABLED
+    depends on I2C && INPUT
+    help
+      Enable the LiberArk FT6336 driver. It emits relative pointer motion,
+      one-finger left clicks, two-finger right clicks, and two-finger scroll
+      events directly into Zephyr's input subsystem.
+
+endmenu

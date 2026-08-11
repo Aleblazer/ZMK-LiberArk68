@@ -32,10 +32,16 @@ the dongle Xiao as follows:
 | `TP_VCC` | 3.3 V |
 | `TP_GND` | GND |
 
-This test converts absolute touch coordinates into cursor movement. For the
-display's landscape orientation, horizontal movement is inverted and both axes
-are scaled to 2.5x. Tap-to-click and multitouch gestures are intentionally not
-enabled yet.
+The touch controller supports these initial gestures:
+
+- One-finger movement controls the cursor at 2.5x raw travel.
+- A short one-finger tap sends a left click.
+- A short two-finger tap sends a right click.
+- Two-finger movement sends vertical and horizontal scroll events.
+
+The FT6336 supplies at most two contacts, so gestures requiring three or more
+fingers are not available. Tap and scroll thresholds are properties on the
+`ft6336@38` node in `liberark68_dongle.overlay` for hardware tuning.
 
 ## Firmware
 

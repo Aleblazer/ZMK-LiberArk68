@@ -10,6 +10,32 @@
  */
 
 #include "liberark68.dtsi"
+#include <behaviors/input_processor_absolute_to_relative.dtsi>
+
+/*
+ * FT6336 capacitive touch controller on the display module.
+ *
+ * Wiring:
+ *   TP_SDA -> Xiao D4 / P0.04
+ *   TP_SCL -> Xiao D5 / P0.05
+ *   TP_INT -> Xiao D0 / P0.02
+ *   TP_RST -> Xiao D1 / P0.03
+ *
+ * Zephyr's FT5336-family driver explicitly supports FT6x36 controllers.
+ * It reports the first contact as absolute coordinates; the listener below
+ * converts successive positions to relative HID mouse movement.
+ */
+&i2c1 {
+    status = "okay";
+
+    touch_sensor: ft6336@38 {
+        compatible = "focaltech,ft5336";
+        reg = <0x38>;
+        status = "okay";
+        int-gpios = <&xiao_d 0 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+        reset-gpios = <&xiao_d 1 GPIO_ACTIVE_LOW>;
+    };
+};
 
 / {
     split_inputs {
@@ -44,5 +70,11 @@
         compatible = "zmk,input-listener";
         device = <&fader_split_right>;
         input-processors = <&zip_fwd_to_hid_io>;
+    };
+
+    touch_listener: touch_listener {
+        compatible = "zmk,input-listener";
+        device = <&touch_sensor>;
+        input-processors = <&zip_absolute_to_relative>;
     };
 };

@@ -17,6 +17,24 @@ Designed ground-up around ZMK firmware. The PCB integrates winged gasket mountin
 - **Dongle**: [Prospector](https://github.com/Aleblazer/prospector-zmk-module/tree/codex/ili9341-port) adapter with an ILI9341 320x240 LCD for live status (layer, modifiers, battery)
 - **VIK connector** on each half for future peripherals (encoder, trackpad, etc.)
 
+### FT6336 touchpad test wiring
+
+The `codex/ili9341-touchpad-test` branch uses the ILI9341 module's FT6336
+touch controller as a one-finger relative mouse. Connect its touch signals to
+the dongle Xiao as follows:
+
+| Touch signal | Xiao nRF52840 pin |
+|---|---|
+| `TP_SDA` | D4 / P0.04 |
+| `TP_SCL` | D5 / P0.05 |
+| `TP_INT` | D0 / P0.02 |
+| `TP_RST` | D1 / P0.03 |
+| `TP_VCC` | 3.3 V |
+| `TP_GND` | GND |
+
+This initial test converts absolute touch coordinates into cursor movement.
+Tap-to-click and multitouch gestures are intentionally not enabled yet.
+
 ## Firmware
 
 This repo is a [ZMK](https://zmk.dev) user config. The shield lives in [`boards/shields/liberark68/`](boards/shields/liberark68/) and includes:

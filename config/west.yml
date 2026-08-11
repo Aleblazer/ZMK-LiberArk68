@@ -4,6 +4,8 @@ manifest:
       url-base: https://github.com/zmkfirmware
     - name: badjeff
       url-base: https://github.com/badjeff
+    - name: halfdane
+      url-base: https://github.com/halfdane
     - name: aleblazer
       url-base: https://github.com/Aleblazer
   projects:
@@ -15,6 +17,11 @@ manifest:
       remote: aleblazer
       # Diagnostic ILI9341 build with display inversion enabled.
       revision: 6837847bbeeca7548b193e2efdfa6ca0796138a7
+    # Converts the FT6336's absolute touch coordinates into the relative
+    # X/Y events expected by ZMK's HID mouse path. Pinned for reproducibility.
+    - name: zmk-input-processors
+      remote: halfdane
+      revision: 7d18ba7af91e485bbd9febda150505fb38ce6d8a
     # Fork adds per-channel report-threshold (deadband) so the slide-pot input
     # goes quiet at rest and the wireless halves can deep-sleep, plus what the
     # I2C-ADC fader board needs: the channel's devicetree gain is used for the

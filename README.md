@@ -8,13 +8,13 @@ Designed ground-up around ZMK firmware. The PCB integrates winged gasket mountin
 
 ## Hardware
 
-- **MCU**: 3× [Seeed Studio XIAO nRF52840](https://wiki.seeedstudio.com/XIAO_BLE/) — one per half, one for the dongle
+- **MCU**: 2× [Seeed Studio XIAO nRF52840](https://wiki.seeedstudio.com/XIAO_BLE/) for the keyboard halves; a Pro Micro footprint nRF52840 controller for the dongle
 - **Matrix**: 3 rows × 12 columns per half (34 keys per side; row 2 has 10 keys)
   - Rows: driven directly from MCU GPIOs (D0–D2)
   - Columns: two daisy-chained [74HC595](https://www.ti.com/product/SN74HC595) shift registers per side (through-hole DIP-16 package), fed over SPI (D3 = CS, D8 = SCLK, D10 = MOSI), giving 16 virtual GPIOs of which 12 are used
 - **Diodes**: switch → diode → row (col2row scanning)
-- **Connectivity**: BLE; each half is a peripheral, the third XIAO is the BLE central
-- **Dongle**: [Prospector](https://github.com/carrefinho/prospector-zmk-module/tree/feat/new-status-screens) adapter with an ST7789 LCD for live status (layer, modifiers, battery)
+- **Connectivity**: BLE; each half is a peripheral and the Pro Micro footprint controller is the BLE central
+- **Dongle**: [wide-screen Prospector](https://github.com/Aleblazer/prospector-zmk-module/tree/codex/st7789-284x76-port) with a 2.25-inch 284×76 ST7789 display
 - **VIK connector** on each half for future peripherals (encoder, trackpad, etc.)
 
 ## Firmware
@@ -41,19 +41,22 @@ CI builds run automatically on every push via [`.github/workflows/build.yml`](.g
 - `liberark68_left` — left half firmware
 - `liberark68_right` — right half firmware
 - `liberark68_dongle prospector_adapter` — dongle with Studio + Prospector display
-- `settings_reset` — wipes the settings partition on any board (re-pairing, recovery)
+- `settings_reset_xiao` / `settings_reset_dongle` — controller-specific settings wipe images
 
-Built artifacts are downloadable from the Actions run page as a `firmware.zip` containing four `.uf2` files.
+Built artifacts are downloadable from the Actions run page as a `firmware.zip` containing five `.uf2` files.
 
 ## Flashing
 
 1. Double-tap the reset button on the target board to enter UF2 bootloader mode
-2. Drag the matching `.uf2` onto the `XIAO-SENSE` USB mass-storage drive that appears
+2. Drag the matching `.uf2` onto the bootloader drive that appears (`XIAO-SENSE`
+   for the halves; the dongle drive name depends on the Pro Micro clone)
 3. The board reboots automatically
 
 **Order matters for pairing**: flash the dongle first, then pair the left half, then the right half. Prospector arranges its battery widgets in pairing order.
 
-If pairings ever get wedged, flash `settings_reset.uf2` onto the misbehaving board to wipe its settings partition, then re-flash the normal firmware.
+If pairings ever get wedged, use `settings_reset_xiao.uf2` for either half or
+`settings_reset_dongle.uf2` for the Pro Micro footprint dongle, then re-flash
+the normal firmware.
 
 ## ZMK Studio
 

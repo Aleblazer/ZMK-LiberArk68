@@ -8,14 +8,17 @@ include:
     shield: liberark68_right
     cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
     artifact-name: liberark68_right
-  # Dongle: third Xiao + Prospector adapter (ST7789), new status screens.
-  - board: xiao_ble//zmk
+  # Dongle: Pro Micro footprint nRF52840 + 2.25in wide Prospector display.
+  - board: nice_nano//zmk
     shield: liberark68_dongle prospector_adapter
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
     artifact-name: liberark68_dongle
-  # Settings wipe image — all three boards are Xiao nRF52840 again.
+  # Settings wipe images for both controller footprints.
   # Flash, wait ~5s, then re-flash normal firmware.
   - board: xiao_ble//zmk
     shield: settings_reset
-    artifact-name: settings_reset
+    artifact-name: settings_reset_xiao
+  - board: nice_nano//zmk
+    shield: settings_reset
+    artifact-name: settings_reset_dongle

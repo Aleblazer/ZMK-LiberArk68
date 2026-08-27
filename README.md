@@ -14,7 +14,7 @@ Designed ground-up around ZMK firmware. The PCB integrates winged gasket mountin
   - Columns: two daisy-chained [74HC595](https://www.ti.com/product/SN74HC595) shift registers per side (through-hole DIP-16 package), fed over SPI (D3 = CS, D8 = SCLK, D10 = MOSI), giving 16 virtual GPIOs of which 12 are used
 - **Diodes**: switch → diode → row (col2row scanning)
 - **Connectivity**: BLE; each half is a peripheral and the Pro Micro footprint controller is the BLE central
-- **Dongle**: [wide-screen Prospector](https://github.com/Aleblazer/prospector-zmk-module/tree/codex/st7789-284x76-port) with a 2.25-inch 284×76 ST7789 display
+- **Dongle**: [wide-screen Prospector](https://github.com/Aleblazer/prospector-zmk-module/tree/feat/st7789-wide-port) with a 2.25-inch 284×76 ST7789 display
 - **VIK connector** on each half for future peripherals (encoder, trackpad, etc.)
 
 ## Firmware

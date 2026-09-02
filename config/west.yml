@@ -14,7 +14,7 @@ manifest:
     - name: prospector-zmk-module
       remote: aleblazer
       # Wide 284x76 Operator layout plus nice!nano/Pro Micro board wiring.
-      revision: d4e521b405f9e7499569a9e779dadcc2fdcbafa5
+      revision: 5a432ea19d6fc8f285701390e66643e73d46dc5d
     # Fork adds per-channel report-threshold (deadband) so the slide-pot input
     # goes quiet at rest and the wireless halves can deep-sleep, plus what the
     # I2C-ADC fader board needs: the channel's devicetree gain is used for the

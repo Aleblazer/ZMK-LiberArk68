@@ -7,8 +7,8 @@
  *   row 2: L cols 0..9,  then R cols 0..9    (20)
  *
  * The faders are analog inputs (not keys), so they don't appear here.
- * Momentary layer keys from the KLE: L outer-mid -> mo 4, L thumb -> mo 2,
- * R thumb -> mo 3. Layers 1-4 are placeholder &trans; fill them in via Studio
+ * Momentary layer keys from the KLE: L outer-mid -> mo 3, L thumb -> mo 1,
+ * R thumb -> mo 2. Layers 1-4 are placeholder &trans; fill them in via Studio
  * or by editing the layer_N blocks below.
  */
 
@@ -35,10 +35,10 @@
 &kp ESC   &kp N1  &kp N2    &kp N3   &kp N4    &kp N5    &kp TAB    &kp Q  &kp W  &kp E  &kp R  &kp T   &kp BSPC   &kp N0  &kp N9    &kp N8   &kp N7  &kp N6   &kp BSLH   &kp P  &kp O  &kp I  &kp U  &kp Y
 
 /* row 1                                                                                                                                                                                          */
-&mo 4    &kp A   &kp S     &kp D    &kp F     &kp G    &kp LSHFT  &kp Z  &kp X  &kp C  &kp V  &kp B    &kp SQT    &kp SEMI &kp L  &kp K  &kp J  &kp H  &kp RET    &kp QMARK &kp DOT &kp COMMA &kp M &kp N
+&mo 3    &kp A   &kp S     &kp D    &kp F     &kp G    &kp LSHFT  &kp Z  &kp X  &kp C  &kp V  &kp B    &kp SQT    &kp SEMI &kp L  &kp K  &kp J  &kp H  &kp RET    &kp FSLH  &kp DOT &kp COMMA &kp M &kp N
 
 /* row 2  L0..L9                                                                              R0..R9                                                                                              */
-&kp LCTRL &kp LALT &kp LGUI &kp F12  &mo 2     &kp SPACE &kp RET    &kp GRAVE &kp LBKT &kp MINUS    &kp RIGHT &kp DOWN &kp UP &kp LEFT &mo 3 &kp SPACE &kp RET   &kp F11  &kp RBKT  &kp EQUAL
+&kp LCTRL &kp LALT &kp LGUI &kp F12  &mo 1     &kp SPACE &kp RET    &kp GRAVE &kp LBKT &kp MINUS    &kp RIGHT &kp DOWN &kp UP &kp LEFT &mo 2 &kp RSHFT &kp RCTRL &kp DEL  &kp RBKT  &kp EQUAL
             >;
         };
 

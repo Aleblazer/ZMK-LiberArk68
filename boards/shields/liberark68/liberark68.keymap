@@ -8,8 +8,8 @@
  *
  * The faders are analog inputs (not keys), so they don't appear here.
  * Momentary layer keys from the KLE: L outer-mid -> mo 3, L thumb -> mo 1,
- * R thumb -> mo 2. Layers 1-4 are placeholder &trans; fill them in via Studio
- * or by editing the layer_N blocks below.
+ * R thumb -> mo 2. Layers 1 and 2 provide mirrored keypad/navigation layouts;
+ * layers 3 and 4 remain placeholder &trans maps.
  */
 
 #include <behaviors.dtsi>
@@ -45,18 +45,28 @@
         layer_1 {
             display-name = "L1";
             bindings = <
-                TRANS_ROW_24
-                TRANS_ROW_24
-                TRANS_ROW_20
+/* row 0  L0..L11                                                                                                                     R0..R11                                                                                             */
+&trans &kp F1 &kp F2 &kp F3 &kp F4 &kp F5  &trans &kp KP_N7 &kp KP_N8 &kp KP_N9 &kp KP_NUMLOCK &trans    &kp F11 &kp F10 &kp F9 &kp F8 &kp F7 &kp F6  &kp F12 &trans &trans &kp PAUSE_BREAK &kp SLCK &kp PSCRN
+
+/* row 1                                                                                                                                                                                                                             */
+&trans &kp KP_N4 &kp KP_N5 &kp KP_N6 &trans &trans  &trans &kp KP_N1 &kp KP_N2 &kp KP_N3 &trans &trans    &trans &trans &trans &kp PG_UP &kp HOME &kp INSERT  &trans &trans &trans &kp PG_DN &kp END &kp DEL
+
+/* row 2  L0..L9                                                                                                      R0..R9                                                                                                         */
+&trans &kp KP_N0 &kp KP_DOT &trans &trans &trans &trans &trans &trans &trans    &trans &trans &trans &trans &trans &trans &trans &trans &trans &trans
             >;
         };
 
         layer_2 {
             display-name = "L2";
             bindings = <
-                TRANS_ROW_24
-                TRANS_ROW_24
-                TRANS_ROW_20
+/* row 0  L0..L11                                                                                               R0..R11                                                                                                                   */
+&trans &kp F1 &kp F2 &kp F3 &kp F4 &kp F5  &trans &trans &trans &kp PSCRN &kp SLCK &kp PAUSE_BREAK    &kp F11 &kp F10 &kp F9 &kp F8 &kp F7 &kp F6  &kp F12 &kp KP_N9 &kp KP_N8 &kp KP_N7 &kp KP_NUMLOCK &trans
+
+/* row 1                                                                                                                                                                                                                                  */
+&trans &trans &trans &kp INSERT &kp HOME &kp PG_UP  &trans &trans &trans &kp DEL &kp END &kp PG_DN    &trans &kp KP_N6 &kp KP_N5 &kp KP_N4 &trans &trans  &trans &kp KP_N3 &kp KP_N2 &kp KP_N1 &trans &trans
+
+/* row 2  L0..L9                                                                                         R0..R9                                                                                                                            */
+&trans &trans &trans &trans &trans &trans &trans &trans &trans &trans    &trans &trans &kp KP_DOT &kp KP_N0 &trans &trans &trans &trans &trans &trans
             >;
         };
 

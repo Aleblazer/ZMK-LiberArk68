@@ -18,7 +18,9 @@ include:
   # (128x128x10 volume) over two SPI buses, no Prospector display.
   - board: nice_nano//zmk
     shield: liberark68_dongle voxel_volume
-    cmake-args: -DCONFIG_ZMK_SPLIT=y
+    # The dongle .conf enables ZMK_DISPLAY for the OLED adapter; the voxel
+    # volume is not a Zephyr display device, so switch that off here.
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_DISPLAY=n
     artifact-name: liberark68_voxel_dongle
   # Settings wipe images — the halves and the dongle are different MCUs now,
   # so build one per board type. Flash, wait ~5s, then re-flash normal firmware.

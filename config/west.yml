@@ -2,6 +2,8 @@ manifest:
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
+    - name: aleblazer
+      url-base: https://github.com/Aleblazer
     - name: aym1607
       url-base: https://github.com/AYM1607
     - name: mctechnology17

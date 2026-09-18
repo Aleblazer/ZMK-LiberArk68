@@ -17,5 +17,10 @@ manifest:
     - name: zmk-oled-adapter
       remote: mctechnology17
       revision: main
+    # Volumetric SH1107 display module (ten stacked OLEDs on two SPI buses)
+    # for the voxel dongle build. Tracks main.
+    - name: zmk-voxel-display
+      remote: aleblazer
+      revision: main
   self:
     path: config

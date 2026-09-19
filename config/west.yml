@@ -13,9 +13,13 @@ manifest:
       remote: zmkfirmware
       revision: main
       import: app/west.yml
+    # NV3007 2.79" 142x428 wide-port branch of the Prospector status screens
+    # (Operator layout on a 428x142 canvas). The NV3007 display driver is
+    # vendored in that branch; switch to the standalone zmk-nv3007-display
+    # module once it is published.
     - name: prospector-zmk-module
-      remote: carrefinho
-      revision: feat/new-status-screens
+      remote: aleblazer
+      revision: feat/nv3007-wide-port
     # Fork adds per-channel report-threshold (deadband) so the slide-pot input
     # goes quiet at rest and the wireless halves can deep-sleep, plus what the
     # I2C-ADC fader board needs: the channel's devicetree gain is used for the

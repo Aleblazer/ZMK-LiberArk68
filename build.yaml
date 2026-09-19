@@ -10,12 +10,13 @@ include:
     artifact-name: liberark68_right
   # Dongle: third Xiao + Prospector adapter with the 2.79" NV3007 panel
   # (428x142 Operator layout from prospector-zmk-module feat/nv3007-wide-port).
+  # Bring-up image: USB serial logging instead of Studio, driver paints RGB
+  # bars + white border for 8 s at boot. Restore the studio-rpc-usb-uart
+  # snippet and drop the NV3007_* args once the panel is proven.
   - board: xiao_ble//zmk
     shield: liberark68_dongle prospector_adapter
-    snippet: studio-rpc-usb-uart
-    # Bring-up aid: the driver paints RGB bars + white border for 3 s at boot.
-    # Drop NV3007_INIT_TEST_PATTERN once the panel is proven.
-    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_NV3007_INIT_TEST_PATTERN=y
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_ZMK_STUDIO=n -DCONFIG_ZMK_SPLIT=y -DCONFIG_NV3007_INIT_TEST_PATTERN=y -DCONFIG_NV3007_INIT_TEST_PATTERN_HOLD_MS=8000
     artifact-name: liberark68_nv3007_dongle
   # Settings wipe image — all three boards are Xiao nRF52840 again.
   # Flash, wait ~5s, then re-flash normal firmware.

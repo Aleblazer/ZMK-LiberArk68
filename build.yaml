@@ -10,16 +10,17 @@ include:
     artifact-name: liberark68_right
   # Dongle: third Xiao + Prospector adapter with the 2.79" NV3007 panel
   # (428x142 Operator layout from prospector-zmk-module feat/nv3007-wide-port).
-  # Pixel format probe: fills the screen solid three times (red 16 bit, red
-  # 18 bit, blue 18 bit), 4 s each. Whichever red looks solid is the format
-  # the panel honours. Diagnostic only.
+  # Coverage probe: fills the screen white at two bytes per pixel, then at
+  # three, 5 s each. How much of the glass turns white says which byte ratio
+  # the panel is using. USB serial logging instead of Studio, so the driver
+  # also reports geometry, MADCTL and byte counts. Diagnostic only.
   - board: xiao_ble//zmk
     shield: liberark68_dongle prospector_adapter
-    snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_NV3007_INIT_TEST_PATTERN=y -DCONFIG_NV3007_INIT_TEST_PATTERN_HOLD_MS=4000
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_ZMK_STUDIO=n -DCONFIG_ZMK_SPLIT=y -DCONFIG_NV3007_INIT_TEST_PATTERN=y -DCONFIG_NV3007_INIT_TEST_PATTERN_HOLD_MS=5000
     artifact-name: liberark68_nv3007_probe
-  # Candidate fix: keep the panel in its native 18 bit mode and expand
-  # RGB565 to RGB666 in the driver. Flash this if the 18 bit red is solid.
+  # Candidate: keep the panel in its native 18 bit mode and expand RGB565 to
+  # RGB666 in the driver.
   - board: xiao_ble//zmk
     shield: liberark68_dongle prospector_adapter
     snippet: studio-rpc-usb-uart

@@ -10,22 +10,19 @@ include:
     artifact-name: liberark68_right
   # Dongle: third Xiao + Prospector adapter with the 2.79" NV3007 panel
   # (428x142 Operator layout from prospector-zmk-module feat/nv3007-wide-port).
-  # Coverage probe: fills the screen white at two bytes per pixel, then at
-  # three, 5 s each. How much of the glass turns white says which byte ratio
-  # the panel is using. USB serial logging instead of Studio, so the driver
-  # also reports geometry, MADCTL and byte counts. Diagnostic only.
-  - board: xiao_ble//zmk
-    shield: liberark68_dongle prospector_adapter
-    snippet: zmk-usb-logging
-    cmake-args: -DCONFIG_ZMK_STUDIO=n -DCONFIG_ZMK_SPLIT=y -DCONFIG_NV3007_INIT_TEST_PATTERN=y -DCONFIG_NV3007_INIT_TEST_PATTERN_HOLD_MS=5000
-    artifact-name: liberark68_nv3007_probe
-  # Candidate: keep the panel in its native 18 bit mode and expand RGB565 to
-  # RGB666 in the driver.
+  # NV3007 2.79in dongle, Operator layout on a 428x142 canvas.
   - board: xiao_ble//zmk
     shield: liberark68_dongle prospector_adapter
     snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_NV3007_PIXEL_FORMAT_18BIT=y
-    artifact-name: liberark68_nv3007_18bit
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
+    artifact-name: liberark68_nv3007_dongle
+  # Same, with USB serial logging instead of Studio, for confirming that the
+  # vendor init sequence is now actually transmitted.
+  - board: xiao_ble//zmk
+    shield: liberark68_dongle prospector_adapter
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_ZMK_STUDIO=n -DCONFIG_ZMK_SPLIT=y
+    artifact-name: liberark68_nv3007_dongle_log
   # Settings wipe image — all three boards are Xiao nRF52840 again.
   # Flash, wait ~5s, then re-flash normal firmware.
   - board: xiao_ble//zmk

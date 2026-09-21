@@ -16,13 +16,15 @@ include:
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
     artifact-name: liberark68_nv3007_dongle
-  # Same, with USB serial logging instead of Studio, for confirming that the
-  # vendor init sequence is now actually transmitted.
+  # Same, but sending F1=0Eh and F9=17h as separate commands the way LVGL and
+  # Arduino_GFX do, instead of two bytes to F1. F1 is pol_switch, a one byte
+  # register that sets where the polarity signal changes over between the two
+  # halves of the panel, which is the suspect for half screen banding.
   - board: xiao_ble//zmk
     shield: liberark68_dongle prospector_adapter
-    snippet: zmk-usb-logging
-    cmake-args: -DCONFIG_ZMK_STUDIO=n -DCONFIG_ZMK_SPLIT=y
-    artifact-name: liberark68_nv3007_dongle_log
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_NV3007_INIT_F9=y
+    artifact-name: liberark68_nv3007_dongle_f9
   # Settings wipe image — all three boards are Xiao nRF52840 again.
   # Flash, wait ~5s, then re-flash normal firmware.
   - board: xiao_ble//zmk

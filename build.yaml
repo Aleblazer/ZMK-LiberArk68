@@ -16,13 +16,6 @@ include:
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
     artifact-name: liberark68_nv3007_dongle
-  # Same, but the WPM meter sweeps up and down on its own so the panel can be
-  # judged in motion with nothing paired to the dongle. Bring-up only.
-  - board: xiao_ble//zmk
-    shield: liberark68_dongle prospector_adapter
-    snippet: studio-rpc-usb-uart
-    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_PROSPECTOR_DEMO_WPM=y
-    artifact-name: liberark68_nv3007_dongle_demo
   # Settings wipe image — all three boards are Xiao nRF52840 again.
   # Flash, wait ~5s, then re-flash normal firmware.
   - board: xiao_ble//zmk

@@ -16,6 +16,18 @@ include:
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y
     artifact-name: liberark68_nv3007_dongle
+  # Field layout on the NV3007, with and without the synthetic typing sweep.
+  # The dongle .conf selects Operator; the cmake arg overrides that choice.
+  - board: xiao_ble//zmk
+    shield: liberark68_dongle prospector_adapter
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_PROSPECTOR_STATUS_SCREEN_FIELD=y
+    artifact-name: liberark68_nv3007_dongle_field
+  - board: xiao_ble//zmk
+    shield: liberark68_dongle prospector_adapter
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_PROSPECTOR_STATUS_SCREEN_FIELD=y -DCONFIG_PROSPECTOR_DEMO_WPM=y
+    artifact-name: liberark68_nv3007_dongle_field_demo
   # Settings wipe image — all three boards are Xiao nRF52840 again.
   # Flash, wait ~5s, then re-flash normal firmware.
   - board: xiao_ble//zmk

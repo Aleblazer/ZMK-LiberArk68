@@ -64,6 +64,15 @@ include:
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_PROSPECTOR_STATUS_SCREEN_GOSSIP=y -DCONFIG_PROSPECTOR_DEMO_WPM=y
     artifact-name: liberark68_nv3007_dongle_gossip_demo
+  # Gossip demo with USB serial logging instead of Studio, for diagnosing
+  # the slowdown and crash with rotation on: once-a-second frame rate and
+  # memory stats, thread stack use every 2 s, LVGL warnings and asserts.
+  # Diagnostic only.
+  - board: xiao_ble//zmk
+    shield: liberark68_dongle prospector_adapter
+    snippet: zmk-usb-logging
+    cmake-args: -DCONFIG_ZMK_STUDIO=n -DCONFIG_ZMK_SPLIT=y -DCONFIG_PROSPECTOR_STATUS_SCREEN_GOSSIP=y -DCONFIG_PROSPECTOR_DEMO_WPM=y -DCONFIG_PROSPECTOR_GOSSIP_STATS=y -DCONFIG_LV_USE_LOG=y -DCONFIG_LV_LOG_LEVEL_WARN=y -DCONFIG_THREAD_ANALYZER=y -DCONFIG_THREAD_ANALYZER_AUTO=y -DCONFIG_THREAD_ANALYZER_AUTO_INTERVAL=2 -DCONFIG_THREAD_NAME=y -DCONFIG_ASSERT=y
+    artifact-name: liberark68_nv3007_dongle_gossip_demo_log
   # Settings wipe image — all three boards are Xiao nRF52840 again.
   # Flash, wait ~5s, then re-flash normal firmware.
   - board: xiao_ble//zmk

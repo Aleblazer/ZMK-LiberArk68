@@ -38,6 +38,11 @@ include:
     snippet: studio-rpc-usb-uart
     cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_PROSPECTOR_STATUS_SCREEN_GOSSIP=y
     artifact-name: liberark68_nv3007_dongle_gossip
+  - board: xiao_ble//zmk
+    shield: liberark68_dongle prospector_adapter
+    snippet: studio-rpc-usb-uart
+    cmake-args: -DCONFIG_ZMK_STUDIO=y -DCONFIG_ZMK_SPLIT=y -DCONFIG_PROSPECTOR_STATUS_SCREEN_BUBBLEDASH=y
+    artifact-name: liberark68_nv3007_dongle_bubbledash
   # Settings wipe image — all three boards are Xiao nRF52840 again.
   # Flash, wait ~5s, then re-flash normal firmware.
   - board: xiao_ble//zmk
